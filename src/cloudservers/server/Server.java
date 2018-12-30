@@ -27,46 +27,55 @@ public class Server implements Runnable {
             PrintWriter w = new PrintWriter(s.getOutputStream());
             BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()));
             String line;
-            do{
+            do {
                 line = r.readLine();
-                // LOGIN
-                if(line.matches("login [^ \n]+ [^ \n]+")){
-                    String []tokens = line.split(" ");
-                    String email = tokens[1];
-                    String password = tokens[2];
-                    
-                    boolean success = users.auth(email, password);
-                    if(success){
-                        try{
-                            users.getUserByEmail(email);
-                            w.println("Success");
+                
+                if (line != null) {
+                    System.out.println("Received message: " + line);
+                    // LOGIN
+                    if (line.matches("login [^ \n]+ [^ \n]+")) {
+                        String[] tokens = line.split(" ");
+                        String email = tokens[1];
+                        String password = tokens[2];
+
+                        boolean success = users.auth(email, password);
+                        if (success) {
+                            try {
+                                this.user = users.getUserByEmail(email);
+                                w.println("Success: User logged in successfully");
+                                System.out.println("Success: User logged in successfully");
+                            } catch (NotExistantUserException e) {
+                                w.println("Error: There is no user with the provided email");
+                                System.out.println("Error: There is no user with the provided email");
+                            }
+                        } else {
+                            w.println("Error: The user doens't exist or the password is incorrect");
+                            System.out.println("Error: The user doens't exist or the password is incorrect");
                         }
-                        catch(NotExistantUserException e){
-                            w.println("Error: There is no user with the provided email");
+                    } // REGISTER
+                    else if (line.matches("register [^ \n]+ [^ \n]+")) {
+                        String[] tokens = line.split(" ");
+                        String email = tokens[1];
+                        String password = tokens[2];
+
+                        try {
+                            users.addUser(email, password);
+                            w.println("Success: User registered successfully");
+                            System.out.println("Success: User registered successfully");
+                        } catch (EmailAlreadyTakenException e) {
+                            w.println("Error: An account has already been created with the provided email");
+                            System.out.println("Error: An account has already been created with the provided email");
                         }
+
                     }
-                    else{
-                        w.println("Error: The user doens't exist or the password is incorrect");
+                    else if(line.equals("logout")){
+                        this.user = null;
+                        w.println("Success: User logged out successfully");
+                        System.out.println("Success: User logged out successfully");
                     }
                 }
-                // REGISTER
-                else if(line.matches("register [^ \n]+ [^ \n]+")){
-                    String []tokens = line.split(" ");
-                    String email = tokens[1];
-                    String password = tokens[2];
-                    
-                    try{
-                        users.addUser(email, password);
-                        w.println("Success");
-                    }
-                    catch(EmailAlreadyTakenException e){
-                        w.println("Error: An account has already been created with the provided email");
-                    }
-       
-                }
-           
-            }while(!line.equals("exit"));
-            
+            } while (!line.equals("exit"));
+
             w.flush();
             s.close();
         } catch (IOException e) {
@@ -82,7 +91,6 @@ public class Server implements Runnable {
 // Reservation
 // Bid
 // Utilization
-
 // Authentication
 // Reserve
 // Bid

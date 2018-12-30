@@ -17,24 +17,30 @@ public class Client{
             System.out.println("Connection established to the server");
             UI ui = new UI();
             String input = ui.showWelcomeMenu();
+            String input1 = null;
+            String serverAnswer = null;
             
             switch(input){
                 case "login":
-                    input = ui.showLoginMenu();
-                    w.print("login " + input);
+                    input1 = ui.showLoginMenu();
+                    w.println(input + " " + input1);
+                    w.flush();
+                    serverAnswer = r.readLine();
+                    System.out.println(serverAnswer);
+                    break;
                 case "register":
-                    input = ui.showRegisterMenu();
-                    w.print("register " + input);
+                    input1 = ui.showRegisterMenu();
+                    w.println(input + " " + input1);
+                    w.flush();
+                    serverAnswer = r.readLine();
+                    System.out.println(serverAnswer);
+                    break;
                 case "exit":
                     System.out.println("Sucess exit");
+                    break;
             }
-            
-            
-
+            w.println("exit");
             w.flush();
-
-            System.out.println(r.readLine());
-
             s.close();
         } catch (java.net.ConnectException e) {
             System.out.println("Could not establish a connection with the server. Please make sure the server is running and try again.");
