@@ -50,4 +50,8 @@ public class UserDAO {
             throw new EmailAlreadyTakenException();
         }
     }
+    
+    //public double getCurrentDebtOfUser(String email){
+        
+    
 }
