@@ -7,26 +7,29 @@ public abstract class ServerInstance {
     private String name;
     private String id;
     private User allocatedTo;
-    private float pricePerHour;
+    private double pricePerHour;
     private ServerState state;
     private long allocatedTime;
+    private String reservationId;
 
-    public ServerInstance(String name, float pricePerHour){
+    public ServerInstance(String name, double pricePerHour) {
         this.name = name;
         this.id = "";
         this.pricePerHour = pricePerHour;
         this.allocatedTo = null;
         this.state = ServerState.FREE;
         this.allocatedTime = 0;
+        this.reservationId = "";
     }
-    
-    public ServerInstance(ServerInstance si){
+
+    public ServerInstance(ServerInstance si) {
         this.name = si.name;
         this.id = si.id;
         this.allocatedTo = si.allocatedTo;
         this.pricePerHour = si.pricePerHour;
         this.state = si.state;
         this.allocatedTime = si.allocatedTime;
+        this.reservationId = si.reservationId;
     }
 
     public String getName() {
@@ -41,7 +44,7 @@ public abstract class ServerInstance {
         return allocatedTo;
     }
 
-    public float getPricePerHour() {
+    public double getPricePerHour() {
         return pricePerHour;
     }
 
@@ -53,6 +56,10 @@ public abstract class ServerInstance {
         return allocatedTime;
     }
 
+    public String getReservationId() {
+        return reservationId;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -60,30 +67,39 @@ public abstract class ServerInstance {
     public void setPricePerHour(float pricePerHour) {
         this.pricePerHour = pricePerHour;
     }
-    
-    public void allocate(User user, ServerState serverState){
+
+    public boolean isAvailable() {
+        return this.state == ServerState.FREE || this.state == ServerState.ON_AUCTION;
+    }
+
+    public void allocate(User user, ServerState serverState, String reservationId) {
         this.allocatedTo = user;
         this.state = serverState;
         this.allocatedTime = System.currentTimeMillis();
+        this.reservationId = reservationId;
     }
     
-    public float getCurrentCost(){
+    public long getCurrentTimeMilis(){
         long begin = this.allocatedTime;
         long end = System.currentTimeMillis();
         long timeInMilis = end - begin;
-        float timeInHours = timeInMilis / 1000 / 3600;
+        return timeInMilis;
+    }
+    
+    public double getCurrentCost() {
+        long timeInMilis = getCurrentTimeMilis();
+        double timeInHours = ((Number)timeInMilis).doubleValue() / 1000 / 3600;
         return timeInHours * this.pricePerHour;
     }
 
-    public float deallocate(){
-        float currentCost = getCurrentCost();
+    public double deallocate() {
+        double currentCost = getCurrentCost();
         this.allocatedTo = null;
         this.state = ServerState.FREE;
         this.allocatedTime = 0;
         return currentCost;
     }
-    
-    public abstract ServerInstance clone();
 
+    public abstract ServerInstance clone();
 
 }

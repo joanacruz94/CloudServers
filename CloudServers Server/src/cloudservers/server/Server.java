@@ -4,6 +4,7 @@ import cloudservers.data.ServerInstanceDAO;
 import cloudservers.data.User;
 import cloudservers.data.UserDAO;
 import cloudservers.exceptions.EmailAlreadyTakenException;
+import cloudservers.exceptions.InexistingServerException;
 import cloudservers.exceptions.InexistingServerTypeException;
 import cloudservers.exceptions.NoServersAvailableException;
 import cloudservers.exceptions.NotExistantUserException;
@@ -20,9 +21,11 @@ public class Server implements Runnable {
 
     private final Socket s;
     private User user;
+    private int numberReservation;
 
     public Server(Socket s) {
         this.s = s;
+        this.numberReservation = 1;
     }
 
     public void run() {
@@ -83,38 +86,64 @@ public class Server implements Runnable {
                         w.flush();
                     } // MY SERVERS
                     else if (line.equals("myServers")) {
-                        w.println();
+                        w.println(servers.getListUserServers(this.user).replace("\n", ";"));
                         w.flush();
                     } // CURRENT DEBT
                     else if (line.equals("currentDebt")) {
-                        w.println();
+                        float currentDebt = this.user.getCurrentDebt();
+                        w.println(String.valueOf(currentDebt));
                         w.flush();
-                    }
-                    else if(line.matches("serverDemand [SML][1-2]")) {
+                    } else if (line.matches("deallocate [SML][1-2][1-100]")) {
                         String[] tokens = line.split(" ");
-                        String serverType = tokens[1];
+                        String reservation = tokens[1];
+                        String serverType = reservation.substring(0, 2);
+                        String numreservation = reservation.substring(2,reservation.length());
+                        System.out.println(numreservation);
                         try {
-                            servers.allocateServerToUser(user, serverType);
+                            servers.deallocateServer(numreservation, serverType);
                             w.println("Success");
                             w.flush();
-                        } catch (NoServersAvailableException ex) {
-                            w.println("Error: No servers of the requested type available at the moment");
-                            w.flush();
-                        } catch (InexistingServerTypeException ex) {
-                            w.println("Error: Please provide a valid server type");
+                        } catch (InexistingServerException ex) {
+                            w.println("Error: Please provide a valid server ID");
                             w.flush();
                         }
-                        
+                } else if (line.matches("serverDemand [SML][1-2]")) {
+                    String[] tokens = line.split(" ");
+                    String serverType = tokens[1];
+                    try {
+                        String reservation = String.valueOf(this.numberReservation);
+                        this.numberReservation++;
+                        servers.allocateServerToUser(user, serverType,String.valueOf(this.numberReservation));
+                        w.println(serverType + reservation);
+                        w.flush();
+                    } catch (NoServersAvailableException ex) {
+                        w.println("Error: No servers of the requested type available at the moment");
+                        w.flush();
+                    } catch (InexistingServerTypeException ex) {
+                        w.println("Error: Please provide a valid server type");
+                        w.flush();
                     }
-                }
-            } while (!line.equals("exit"));
 
-            w.flush();
-            s.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+                }
+                else{
+                    w.println("Error: Command not recognized");
+                    w.flush();
+                }
+            }
+            
         }
+        while (!line.equals("exit"));
+
+        w.flush();
+        s.close();
     }
+    catch (IOException e
+
+    
+        ) {
+            e.printStackTrace();
+    }
+}
 }
 
 // User

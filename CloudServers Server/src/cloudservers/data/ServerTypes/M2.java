@@ -15,7 +15,7 @@ import cloudservers.data.ServerInstance;
 public class M2 extends ServerInstance{
     
     public M2() {
-        super("M2", (float)1.99);
+        super("M2", 1.99);
     }
     
     public M2(M2 instance) {
