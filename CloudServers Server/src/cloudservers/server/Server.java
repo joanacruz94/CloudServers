@@ -93,57 +93,49 @@ public class Server implements Runnable {
                         float currentDebt = this.user.getCurrentDebt();
                         w.println(String.valueOf(currentDebt));
                         w.flush();
-                    } else if (line.matches("deallocate [SML][1-2][1-100]")) {
+                    } else if (line.matches("deallocate [SML][1-2][1-9]")) {
                         String[] tokens = line.split(" ");
                         String reservation = tokens[1];
                         String serverType = reservation.substring(0, 2);
-                        String numreservation = reservation.substring(2,reservation.length());
-                        System.out.println(numreservation);
                         try {
-                            servers.deallocateServer(numreservation, serverType);
+                            servers.deallocateServer(reservation, serverType);
                             w.println("Success");
                             w.flush();
                         } catch (InexistingServerException ex) {
                             w.println("Error: Please provide a valid server ID");
                             w.flush();
                         }
-                } else if (line.matches("serverDemand [SML][1-2]")) {
-                    String[] tokens = line.split(" ");
-                    String serverType = tokens[1];
-                    try {
-                        String reservation = String.valueOf(this.numberReservation);
-                        this.numberReservation++;
-                        servers.allocateServerToUser(user, serverType,String.valueOf(this.numberReservation));
-                        w.println(serverType + reservation);
-                        w.flush();
-                    } catch (NoServersAvailableException ex) {
-                        w.println("Error: No servers of the requested type available at the moment");
-                        w.flush();
-                    } catch (InexistingServerTypeException ex) {
-                        w.println("Error: Please provide a valid server type");
+                    } else if (line.matches("serverDemand [SML][1-2]")) {
+                        String[] tokens = line.split(" ");
+                        String serverType = tokens[1];
+                        try {
+                            String reservation = String.valueOf(this.numberReservation);
+                            servers.allocateServerToUser(user, serverType, String.valueOf(this.numberReservation));
+                            w.println(serverType + reservation);
+                            w.flush();
+                            this.numberReservation++;
+                        } catch (NoServersAvailableException ex) {
+                            w.println("Error: No servers of the requested type available at the moment");
+                            w.flush();
+                        } catch (InexistingServerTypeException ex) {
+                            w.println("Error: Please provide a valid server type");
+                            w.flush();
+                        }
+
+                    } else {
+                        w.println("Error: Command not recognized");
                         w.flush();
                     }
-
                 }
-                else{
-                    w.println("Error: Command not recognized");
-                    w.flush();
-                }
-            }
-            
-        }
-        while (!line.equals("exit"));
 
-        w.flush();
-        s.close();
-    }
-    catch (IOException e
+            } while (!line.equals("exit"));
 
-    
-        ) {
+            w.flush();
+            s.close();
+        } catch (IOException e) {
             e.printStackTrace();
+        }
     }
-}
 }
 
 // User

@@ -69,11 +69,16 @@ public class ServerInstanceDAO {
     public void allocateServerToUser(User user, String serverType, String reservationNumber) throws NoServersAvailableException, InexistingServerTypeException {
         List<ServerInstance> instances = serverInstances.get(serverType);
         boolean allocated = false;
+        
+        Reservation reservation = new Reservation(serverType + reservationNumber, null, "WAITING");
 
         if (instances != null) {
             for (ServerInstance server : instances) {
                 if (server.getState() == ServerState.FREE) {
                     server.allocate(user, ServerState.BUSY_DEMAND, serverType + reservationNumber);
+                    reservation.setServer(server);
+                    reservation.setState("ON ACTION");
+                    user.addReservation(reservation);
                     allocated = true;
                     break;
                 } else if (server.getState() == ServerState.BUSY_AUCTION) {
@@ -89,7 +94,9 @@ public class ServerInstanceDAO {
         }
 
         if (!allocated) {
-            throw new NoServersAvailableException();
+            //throw new NoServersAvailableException();
+            user.addReservation(reservation);
+
         }
 
     }
@@ -100,8 +107,10 @@ public class ServerInstanceDAO {
         boolean deallocated = false;
         
         for (ServerInstance server : instances) {
-            if (server.getReservationId().equals(reservationNumber)) {
+            if (server.getReservationId().equals(serverType + reservationNumber)) {
                 User u = server.getAllocatedTo();
+                Reservation r = u.getReservation(serverType + reservationNumber);
+                r.setState("FINISHED");
                 finalCost = server.deallocate();
                 u.addtoCurrentDebt(finalCost);
                 deallocated = true;
@@ -114,7 +123,8 @@ public class ServerInstanceDAO {
         }
 
     }
-
+    
+    /*
     public List<ServerInstance> listUserServers(User user) {
         List<ServerInstance> allocatedServers = new ArrayList<>();
         serverInstances.values().forEach((instances) -> {
@@ -129,24 +139,34 @@ public class ServerInstanceDAO {
         });
 
         return allocatedServers;
-    }
+    }*/
+    
+    public List<Reservation> listUserReservations(User user) {
+        Map<String,Reservation> allReservations = user.getReservations();
+        List<Reservation> reservations = new ArrayList<>();
+        
+        allReservations.values().stream().filter((r) -> (!r.getState().equals("FINISHED"))).forEachOrdered((r) -> {
+            reservations.add(r);
+        });
 
+        return reservations;
+    }
+    
     public String getListUserServers(User user) {
         List<List<String>> tableLines = new ArrayList<>();
-        tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"Id", "Type", "Reservation Id", "Current Time", "Price per hour", "Current Cost"})));
+        tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "Type", "Current Time", "Price per hour", "Current Cost"})));
 
-        List<ServerInstance> serversList = listUserServers(user);
-        serversList.forEach((server) -> {
-            String id = server.getId();
+        List<Reservation> serversList = listUserReservations(user);
+        serversList.forEach((reservation) -> {
+            ServerInstance server = reservation.getServer();
+            String id = reservation.getId();
             String type = server.getName();
-            String reservationId = server.getReservationId();
             long currentTime = server.getCurrentTimeMilis();
             double price = server.getPricePerHour();
             double currentCost = server.getCurrentCost();
             tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
                 id,
                 type,
-                reservationId,
                 String.valueOf(currentTime / 1000) + " seconds",
                 String.valueOf(price),
                 String.valueOf(currentCost),})));
