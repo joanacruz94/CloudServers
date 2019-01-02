@@ -51,9 +51,9 @@ public class ServerInstanceDAO {
 
             List<ServerInstance> instancesOfType = entry.getValue();
             double price = instancesOfType.get(0).getPricePerHour();
-            int nInstancesFree = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.FREE).count();
-            int nInstancesOcupiedDemand = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.BUSY_DEMAND).count();
-            int nInstancesOcupiedAuction = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.BUSY_AUCTION).count();
+            int nInstancesFree = (int) instancesOfType.stream().filter(si -> si.getState() == ServerStates.FREE).count();
+            int nInstancesOcupiedDemand = (int) instancesOfType.stream().filter(si -> si.getState() == ServerStates.BUSY_DEMAND).count();
+            int nInstancesOcupiedAuction = (int) instancesOfType.stream().filter(si -> si.getState() == ServerStates.BUSY_SPOT).count();
             tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
                 type,
                 String.valueOf(price),
@@ -72,14 +72,14 @@ public class ServerInstanceDAO {
 
         if (instances != null) {
             for (ServerInstance server : instances) {
-                if (server.getState() == ServerState.FREE) {
-                    server.allocate(user, ServerState.BUSY_DEMAND, serverType + reservationNumber);
+                if (server.getState() == ServerStates.FREE) {
+                    server.allocate(user, ServerStates.BUSY_DEMAND, serverType + reservationNumber);
                     allocated = true;
                     break;
-                } else if (server.getState() == ServerState.BUSY_AUCTION) {
+                } else if (server.getState() == ServerStates.BUSY_SPOT) {
                     //TODO
                     break;
-                } else if (server.getState() == ServerState.ON_AUCTION) //TODO
+                } else if (server.getState() == ServerStates.ON_SPOT) //TODO
                 {
                     break;
                 }

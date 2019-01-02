@@ -8,7 +8,7 @@ public abstract class ServerInstance {
     private String id;
     private User allocatedTo;
     private double pricePerHour;
-    private ServerState state;
+    private ServerStates state;
     private long allocatedTime;
     private String reservationId;
 
@@ -17,7 +17,7 @@ public abstract class ServerInstance {
         this.id = "";
         this.pricePerHour = pricePerHour;
         this.allocatedTo = null;
-        this.state = ServerState.FREE;
+        this.state = ServerStates.FREE;
         this.allocatedTime = 0;
         this.reservationId = "";
     }
@@ -48,7 +48,7 @@ public abstract class ServerInstance {
         return pricePerHour;
     }
 
-    public ServerState getState() {
+    public ServerStates getState() {
         return state;
     }
 
@@ -69,10 +69,10 @@ public abstract class ServerInstance {
     }
 
     public boolean isAvailable() {
-        return this.state == ServerState.FREE || this.state == ServerState.ON_AUCTION;
+        return this.state == ServerStates.FREE || this.state == ServerStates.ON_SPOT;
     }
 
-    public void allocate(User user, ServerState serverState, String reservationId) {
+    public void allocate(User user, ServerStates serverState, String reservationId) {
         this.allocatedTo = user;
         this.state = serverState;
         this.allocatedTime = System.currentTimeMillis();
@@ -95,7 +95,7 @@ public abstract class ServerInstance {
     public double deallocate() {
         double currentCost = getCurrentCost();
         this.allocatedTo = null;
-        this.state = ServerState.FREE;
+        this.state = ServerStates.FREE;
         this.allocatedTime = 0;
         return currentCost;
     }

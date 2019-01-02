@@ -9,6 +9,6 @@ package cloudservers.data;
  *
  * @author joanacruz
  */
-public enum ServerState {
-    FREE, BUSY_DEMAND, BUSY_AUCTION, ON_AUCTION
+public enum ServerStates {
+    FREE, BUSY_DEMAND, BUSY_SPOT, ON_SPOT
 }
