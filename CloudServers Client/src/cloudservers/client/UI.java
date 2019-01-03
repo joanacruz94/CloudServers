@@ -158,6 +158,16 @@ public class UI {
         //TODO : check the length of the provided fields
         return email + " " + password;
     }
+    
+    public static String showAuctionServerMenu() {
+        System.out.println("Write the type of the server you want to allocate");
+        String serverType = scanner.nextLine();
+        System.out.println("How much would you like to pay");
+        String price = scanner.nextLine();
+
+        //TODO : check the length of the provided fields
+        return serverType + " " + price;
+    }
 
     public static void waitForEnter() {
         System.out.println("Press enter to continue");

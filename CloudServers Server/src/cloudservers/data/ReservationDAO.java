@@ -5,7 +5,9 @@
  */
 package cloudservers.data;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -23,6 +25,18 @@ public class ReservationDAO {
 
     public static ReservationDAO getInstance() {
         return ourInstance;
+    }
+    
+    public void removeFromList(List<Reservation> reservations){
+        waitingReservations.removeAll(reservations);
+    }
+    
+    public List<Reservation> getUserWaitingReservations(User u){
+        List<Reservation> reservations = new ArrayList<>();
+        waitingReservations.stream().filter((r) -> (r.getUser().equals(u))).forEach((r) -> {
+            reservations.add(r);
+        });
+        return reservations;
     }
 
 }

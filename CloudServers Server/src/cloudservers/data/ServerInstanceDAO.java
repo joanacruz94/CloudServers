@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ServerInstanceDAO {
 
-    public Map<String, ListAndLockPair> serverInstances;
+    public Map<String, List<ServerInstance>> serverInstances;
     public Map<String, Integer> freeInstancesCount;
 
     private static ServerInstanceDAO ourInstance = new ServerInstanceDAO();
@@ -35,7 +35,7 @@ public class ServerInstanceDAO {
             for (int i = 0; i < 5; i++) {
                 servers.add(new ServerInstance(serverType, serverType + "-" + (i + 1), 1.99));
             }
-            serverInstances.put(serverType, new ListAndLockPair(servers, new ReentrantLock()));
+            serverInstances.put(serverType, servers);
             freeInstancesCount.put(serverType, 5);
             
         }
@@ -52,7 +52,7 @@ public class ServerInstanceDAO {
         serverInstances.entrySet().forEach((entry) -> {
             String type = entry.getKey();
 
-            List<ServerInstance> instancesOfType = entry.getValue().getList();
+            List<ServerInstance> instancesOfType = entry.getValue();
             double price = instancesOfType.get(0).getPricePerHour();
             int nInstancesFree = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.FREE).count();
             int nInstancesOcupiedDemand = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.BUSY_DEMAND).count();
@@ -71,13 +71,14 @@ public class ServerInstanceDAO {
 
     public void allocateServerToReservation(String serverType, Reservation reservation) throws InexistingServerTypeException {
         this.lock.lock();
-        ListAndLockPair instances = serverInstances.get(serverType);
+        List<ServerInstance> instances = serverInstances.get(serverType);
         this.lock.unlock();
 
         if (instances != null) {
-            instances.lock();
+            
             OUTER:
-            for (ServerInstance server : instances.getList()) {
+            for (ServerInstance server : instances) {
+                server.lock();
                 if (null != server.getState()) {
                     switch (server.getState()) {
                         case FREE:
@@ -93,8 +94,8 @@ public class ServerInstanceDAO {
                             break;
                     }
                 }
+                server.unlock();
             }
-            instances.unlock();
         } else {
             throw new InexistingServerTypeException();
         }
@@ -106,7 +107,11 @@ public class ServerInstanceDAO {
         reservation.deallocate();
         reservation.unlock();
     }
-
+    
+    public List<Reservation> listUserWaitingResevations(User user){
+        return ReservationDAO.getInstance().getUserWaitingReservations(user);
+    }
+    
     public List<Reservation> listUserReservations(User user) {
         user.lock();
         Map<String, Reservation> allReservations = user.getReservations();
@@ -119,14 +124,19 @@ public class ServerInstanceDAO {
         return reservations;
     }
 
-    public String getListUserServers(User user) {
+    public String getListUserReservations(User user) {
         List<List<String>> tableLines = new ArrayList<>();
         tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Type", "Current Time", "Price per hour", "Current Cost"})));
 
         List<Reservation> reservationsList = listUserReservations(user);
-        reservationsList.forEach((reservation) -> {
+        List<Reservation> waitingReservation = listUserWaitingResevations(user);
+        List<Reservation> allReservation = new ArrayList<>();
+        allReservation.addAll(reservationsList);
+        allReservation.addAll(waitingReservation);
+        allReservation.forEach((reservation) -> {
             ServerInstance server = reservation.getServerInstance();
             String id = reservation.getId();
+            //String idServer = server.getId();
             ReservationState stateReservation = reservation.getState();
             String type = server.getName();
             long currentTime = reservation.getSpentTimeMilis();
@@ -134,6 +144,7 @@ public class ServerInstanceDAO {
             double currentCost = reservation.getCurrentCost();
             tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
                 id,
+                //idServer,
                 stateReservation.toString(),
                 type,
                 String.valueOf(currentTime / 1000) + " seconds",

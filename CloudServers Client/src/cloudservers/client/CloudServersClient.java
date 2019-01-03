@@ -106,7 +106,10 @@ public class CloudServersClient {
                     }
                     break;
                 case "serverAuction":
-                    //TODO
+                    input = UI.showAuctionServerMenu();
+                    cr.writeToServer("serverAuction " + input);
+                    serverAnswer = cr.readFromServer();
+                    System.out.println(serverAnswer);
                     break;
                 case "refresh":
                     cr.writeToServer("serversList");
