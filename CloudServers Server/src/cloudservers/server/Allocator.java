@@ -44,25 +44,30 @@ public class Allocator implements Runnable {
         while (true) {
             reservationsLock.lock();
             try {
+                //if(!reservationDAO.waitingReservations.isEmpty()){
+
                 List<Reservation> allocatedReservations = new ArrayList<>();
-                
                 for (Reservation reservation : reservationDAO.waitingReservations) {
                     String reservationServerType = reservation.getServerType();
                     List<ServerInstance> instancesOfType = serverInstanceDAO.serverInstances.get(reservationServerType);
-                    //instancesOfType.lock();
                     for (ServerInstance serverInstance : instancesOfType) {
                         serverInstance.lock();
                         if (serverInstance.getState() == ServerState.FREE) {
                             //reservation.allocate(serverInstance);
                             serverInstanceDAO.allocateServerToReservation(serverInstance.getName(), reservation);
                             allocatedReservations.add(reservation);
+                            //System.out.println(reservationDAO.waitingReservations.size());
                             break;
                         }
                         serverInstance.unlock();
                     }
                     //instancesOfType.unlock();
+                    reservationDAO.removeFromList(allocatedReservations);
+
                 }
-                reservationDAO.removeFromList(allocatedReservations);
+                
+                //System.out.println(reservationDAO.waitingReservations.size());
+                //}
 
             } catch (InexistingServerTypeException ex) {
                 

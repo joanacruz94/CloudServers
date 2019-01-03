@@ -17,6 +17,7 @@ public class ServerInstanceDAO {
     public Map<String, List<ServerInstance>> serverInstances;
     public Map<String, Integer> freeInstancesCount;
 
+    
     private static ServerInstanceDAO ourInstance = new ServerInstanceDAO();
     public static ReentrantLock lock = new ReentrantLock();
     public static Condition serversAvailable = lock.newCondition();
@@ -48,31 +49,39 @@ public class ServerInstanceDAO {
     public String getServersAsString() {
         List<List<String>> tableLines = new ArrayList<>();
         tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"Type", "Price per hour", "#free instances", "#ocupied instances demand", "#ocupied instances auction"})));
-        this.lock.lock();
-        serverInstances.entrySet().forEach((entry) -> {
-            String type = entry.getKey();
-
-            List<ServerInstance> instancesOfType = entry.getValue();
-            double price = instancesOfType.get(0).getPricePerHour();
-            int nInstancesFree = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.FREE).count();
-            int nInstancesOcupiedDemand = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.BUSY_DEMAND).count();
-            int nInstancesOcupiedSpot = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.BUSY_SPOT).count();
-            tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
-                type,
-                String.valueOf(price),
-                String.valueOf(nInstancesFree),
-                String.valueOf(nInstancesOcupiedDemand),
-                String.valueOf(nInstancesOcupiedSpot)
-            })));
-        });
-        this.lock.unlock();
+        ServerInstanceDAO.lock.lock();
+        try {
+            serverInstances.entrySet().forEach((entry) -> {
+                String type = entry.getKey();
+                
+                List<ServerInstance> instancesOfType = entry.getValue();
+                double price = instancesOfType.get(0).getPricePerHour();
+                int nInstancesFree = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.FREE).count();
+                int nInstancesOcupiedDemand = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.BUSY_DEMAND).count();
+                int nInstancesOcupiedSpot = (int) instancesOfType.stream().filter(si -> si.getState() == ServerState.BUSY_SPOT).count();
+                tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
+                    type,
+                    String.valueOf(price),
+                    String.valueOf(nInstancesFree),
+                    String.valueOf(nInstancesOcupiedDemand),
+                    String.valueOf(nInstancesOcupiedSpot)
+                })));
+            });
+        } finally {
+            ServerInstanceDAO.lock.unlock();
+        }
         return new PrettyTable(tableLines).toString();
     }
 
     public void allocateServerToReservation(String serverType, Reservation reservation) throws InexistingServerTypeException {
-        this.lock.lock();
-        List<ServerInstance> instances = serverInstances.get(serverType);
-        this.lock.unlock();
+        List<ServerInstance> instances = null;
+        boolean alocated = false;
+        ServerInstanceDAO.lock.lock();
+        try {
+            instances = serverInstances.get(serverType);
+        } finally {
+            ServerInstanceDAO.lock.unlock();
+        }
 
         if (instances != null) {
             
@@ -86,6 +95,7 @@ public class ServerInstanceDAO {
                             reservation.setState(ReservationState.ACTIVE);
                             reservation.getUser().addReservation(reservation);
                             this.freeInstancesCount.put(serverType, freeInstancesCount.get(serverType)-1);
+                            alocated = true;
                             break;
                         case BUSY_SPOT:
                             //TODO
@@ -94,6 +104,7 @@ public class ServerInstanceDAO {
                             break;
                     }
                 }
+                if(alocated) break;
                 server.unlock();
             }
         } else {
@@ -129,11 +140,11 @@ public class ServerInstanceDAO {
         tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Type", "Current Time", "Price per hour", "Current Cost"})));
 
         List<Reservation> reservationsList = listUserReservations(user);
+        System.out.println("Tenho reservas ativas" + reservationsList.size());
         List<Reservation> waitingReservation = listUserWaitingResevations(user);
+        System.out.println("Tenho reservas ativas" + waitingReservation.size());
         List<Reservation> allReservation = new ArrayList<>();
-        allReservation.addAll(reservationsList);
-        allReservation.addAll(waitingReservation);
-        allReservation.forEach((reservation) -> {
+        reservationsList.forEach((reservation) -> {
             ServerInstance server = reservation.getServerInstance();
             String id = reservation.getId();
             //String idServer = server.getId();
@@ -150,6 +161,23 @@ public class ServerInstanceDAO {
                 String.valueOf(currentTime / 1000) + " seconds",
                 String.valueOf(price),
                 String.valueOf(currentCost),})));
+        });
+        
+        waitingReservation.forEach((reservation) -> {
+            String id = reservation.getId();
+            ReservationState stateReservation = reservation.getState();
+            String type = reservation.getServerType();
+            String currentTime = "";
+            String price = "";
+            String currentCost = "";
+            tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
+                id,
+                //idServer,
+                stateReservation.toString(),
+                type,
+                currentTime,
+                price,
+                currentCost,})));
         });
 
         return new PrettyTable(tableLines).toString();
