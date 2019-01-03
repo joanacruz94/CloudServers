@@ -5,19 +5,41 @@
  */
 package cloudservers.data;
 
+import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  *
  * @author joanacruz
  */
 public class Reservation {
-    private String id;
-    private ServerInstance serverType;
-    private String state;
 
-    public Reservation(String id, ServerInstance serverType, String state) {
+    private String id;
+    private User user;
+    private String serverType;
+    private ServerInstance serverInstance;
+    private ReservationState state;
+    private long allocatedTime;
+    private long deallocatedTime;
+    private double pricePerHour;
+    private String reservationType;
+    private ReentrantLock lock;
+
+    public Reservation(String id, User user, String serverType, double pricePerHour, String reservationType) {
         this.id = id;
+        this.user = user;
         this.serverType = serverType;
-        this.state = state;
+        this.serverInstance = null;
+        this.state = ReservationState.WAITING;
+        this.allocatedTime = 0;
+        this.deallocatedTime = 0;
+        this.pricePerHour = pricePerHour;
+        this.reservationType = reservationType;
+        this.lock = new ReentrantLock();
+    }
+
+    public User getUser() {
+        return user;
     }
 
     public String getId() {
@@ -28,20 +50,101 @@ public class Reservation {
         this.id = id;
     }
 
-    public ServerInstance getServer() {
-        return serverType;
-    }
-
-    public void setServer(ServerInstance serverType) {
-        this.serverType = serverType;
-    }
-
-    public String getState() {
+    public ReservationState getState() {
         return state;
     }
 
-    public void setState(String state) {
+    public void setState(ReservationState state) {
         this.state = state;
     }
-    
+
+    public String getServerType() {
+        return serverType;
+    }
+
+    public void setServerType(String serverType) {
+        this.serverType = serverType;
+    }
+
+    public ServerInstance getServerInstance() {
+        return serverInstance;
+    }
+
+    public void setServerInstance(ServerInstance serverInstance) {
+        this.serverInstance = serverInstance;
+    }
+
+    public long getAllocatedTime() {
+        return allocatedTime;
+    }
+
+    public void allocate(ServerInstance serverInstance) {
+        //TODO : modify allocation when auctions are implemented
+        this.serverInstance = serverInstance;
+        this.allocatedTime = System.currentTimeMillis();
+        this.serverInstance.allocate(this, ServerState.BUSY_DEMAND);
+    }
+
+    public long getSpentTimeMilis() {
+        long begin = this.allocatedTime;
+        long end;
+        if (this.deallocatedTime == 0) {
+            end = System.currentTimeMillis();
+        } else {
+            end = this.deallocatedTime;
+        }
+        long timeInMilis = end - begin;
+        return timeInMilis;
+    }
+
+    public double getCurrentCost() {
+        //TODO: the price per hour will change when auctions are implemented
+
+        long timeInMilis = getSpentTimeMilis();
+
+        double timeInHours = ((Number) timeInMilis).doubleValue() / 1000 / 3600;
+        double pricePerHour;
+        if (this.reservationType.equals("SPOT")) {
+            pricePerHour = this.pricePerHour;
+        } else {
+            pricePerHour = this.serverInstance.getPricePerHour();
+        }
+        return timeInHours * pricePerHour;
+    }
+
+   
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Reservation other = (Reservation) obj;
+        if (!Objects.equals(this.id, other.id)) {
+            return false;
+        }
+        return true;
+    }
+
+    public void deallocate() {
+        this.state = ReservationState.FINISHED;
+        this.serverInstance.lock();
+        this.serverInstance.deallocate();
+        this.serverInstance.unlock();
+        this.deallocatedTime = System.currentTimeMillis();
+    }
+
+    public void lock() {
+        this.lock.lock();
+    }
+
+    public void unlock() {
+        this.lock.unlock();
+    }
+
 }

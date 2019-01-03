@@ -1,25 +1,24 @@
 package cloudservers.data;
 
 import cloudservers.data.User;
+import java.util.concurrent.locks.ReentrantLock;
 
-public abstract class ServerInstance {
+public class ServerInstance {
 
     private String name;
     private String id;
-    private User allocatedTo;
+    private Reservation allocatedTo;
     private double pricePerHour;
-    private ServerStates state;
-    private long allocatedTime;
-    private String reservationId;
+    private ServerState state;
+    private ReentrantLock lock;
 
-    public ServerInstance(String name, double pricePerHour) {
+    public ServerInstance(String name, String id, double pricePerHour) {
         this.name = name;
         this.id = "";
         this.pricePerHour = pricePerHour;
         this.allocatedTo = null;
-        this.state = ServerStates.FREE;
-        this.allocatedTime = 0;
-        this.reservationId = "";
+        this.state = ServerState.FREE;
+        this.lock = new ReentrantLock();
     }
 
     public ServerInstance(ServerInstance si) {
@@ -28,8 +27,6 @@ public abstract class ServerInstance {
         this.allocatedTo = si.allocatedTo;
         this.pricePerHour = si.pricePerHour;
         this.state = si.state;
-        this.allocatedTime = si.allocatedTime;
-        this.reservationId = si.reservationId;
     }
 
     public String getName() {
@@ -40,7 +37,7 @@ public abstract class ServerInstance {
         return id;
     }
 
-    public User getAllocatedTo() {
+    public Reservation getAllocatedTo() {
         return allocatedTo;
     }
 
@@ -48,58 +45,38 @@ public abstract class ServerInstance {
         return pricePerHour;
     }
 
-    public ServerStates getState() {
+    public ServerState getState() {
         return state;
-    }
-
-    public long getAllocatedTime() {
-        return allocatedTime;
-    }
-
-    public String getReservationId() {
-        return reservationId;
     }
 
     public void setId(String id) {
         this.id = id;
     }
 
-    public void setPricePerHour(float pricePerHour) {
-        this.pricePerHour = pricePerHour;
-    }
-
     public boolean isAvailable() {
-        return this.state == ServerStates.FREE || this.state == ServerStates.ON_SPOT;
+        return this.state == ServerState.FREE;
     }
 
-    public void allocate(User user, ServerStates serverState, String reservationId) {
-        this.allocatedTo = user;
+    public void allocate(Reservation reservation, ServerState serverState) {
+        this.allocatedTo = reservation;
         this.state = serverState;
-        this.allocatedTime = System.currentTimeMillis();
-        this.reservationId = reservationId;
-    }
-    
-    public long getCurrentTimeMilis(){
-        long begin = this.allocatedTime;
-        long end = System.currentTimeMillis();
-        long timeInMilis = end - begin;
-        return timeInMilis;
-    }
-    
-    public double getCurrentCost() {
-        long timeInMilis = getCurrentTimeMilis();
-        double timeInHours = ((Number)timeInMilis).doubleValue() / 1000 / 3600;
-        return timeInHours * this.pricePerHour;
     }
 
-    public double deallocate() {
-        double currentCost = getCurrentCost();
+    public void deallocate() {
         this.allocatedTo = null;
-        this.state = ServerStates.FREE;
-        this.allocatedTime = 0;
-        return currentCost;
+        this.state = ServerState.FREE;
     }
 
-    public abstract ServerInstance clone();
+    public ServerInstance clone() {
+        return new ServerInstance(this);
+    }
+    
+    public void lock(){
+        this.lock.lock();
+    }
+    
+    public void unlock(){
+        this.lock.unlock();
+    }
 
 }

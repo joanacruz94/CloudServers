@@ -144,7 +144,7 @@ public class UI {
         System.out.println("Insert a password ");
         String password = scanner.nextLine();
 
-        // TODO : check the length of the provided fields
+        //TODO : check the length of the provided fields
         return email + " " + password;
     }
 
@@ -155,7 +155,7 @@ public class UI {
         System.out.println("Insert a password ");
         String password = scanner.nextLine();
 
-        // TODO : check the length of the provided fields
+        //TODO : check the length of the provided fields
         return email + " " + password;
     }
 

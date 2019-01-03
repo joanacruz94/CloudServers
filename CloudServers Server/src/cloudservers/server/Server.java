@@ -1,5 +1,7 @@
 package cloudservers.server;
 
+import cloudservers.data.Reservation;
+import cloudservers.data.ReservationDAO;
 import cloudservers.data.ServerInstanceDAO;
 import cloudservers.data.User;
 import cloudservers.data.UserDAO;
@@ -21,17 +23,18 @@ public class Server implements Runnable {
 
     private final Socket s;
     private User user;
-    private int numberReservation;
+    private ReservationId reservationId;
 
-    public Server(Socket s) {
+    public Server(Socket s, ReservationId r) {
         this.s = s;
-        this.numberReservation = 1;
+        this.reservationId = r;
     }
 
     public void run() {
         try {
             UserDAO users = UserDAO.getInstance();
             ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
+            ReservationDAO reservations = ReservationDAO.getInstance();
 
             PrintWriter w = new PrintWriter(s.getOutputStream());
             BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -90,15 +93,17 @@ public class Server implements Runnable {
                         w.flush();
                     } // CURRENT DEBT
                     else if (line.equals("currentDebt")) {
-                        float currentDebt = this.user.getCurrentDebt();
+                        //TODO
+                        this.user.lock();
+                        double currentDebt = this.user.getCurrentDebt();
+                        this.user.unlock();
                         w.println(String.valueOf(currentDebt));
                         w.flush();
-                    } else if (line.matches("deallocate [SML][1-2][1-9]")) {
+                    } else if (line.matches("deallocate [0-9]+")) {
                         String[] tokens = line.split(" ");
-                        String reservation = tokens[1];
-                        String serverType = reservation.substring(0, 2);
+                        String reservationNumber = tokens[1];
                         try {
-                            servers.deallocateServer(reservation, serverType);
+                            servers.deallocateReservation(reservationNumber, this.user);
                             w.println("Success");
                             w.flush();
                         } catch (InexistingServerException ex) {
@@ -108,19 +113,17 @@ public class Server implements Runnable {
                     } else if (line.matches("serverDemand [SML][1-2]")) {
                         String[] tokens = line.split(" ");
                         String serverType = tokens[1];
+                        String reservationNumber = reservationId.nextId();
+                        Reservation reservation = new Reservation(reservationNumber, user, serverType, 0, "DEMAND");
+                        ReservationDAO.lock.lock();
                         try {
-                            String reservation = String.valueOf(this.numberReservation);
-                            servers.allocateServerToUser(user, serverType, String.valueOf(this.numberReservation));
-                            w.println(serverType + reservation);
-                            w.flush();
-                            this.numberReservation++;
-                        } catch (NoServersAvailableException ex) {
-                            w.println("Error: No servers of the requested type available at the moment");
-                            w.flush();
-                        } catch (InexistingServerTypeException ex) {
-                            w.println("Error: Please provide a valid server type");
-                            w.flush();
+                            reservations.waitingReservations.add(reservation);
+                            ReservationDAO.hasReservations.signalAll();
+                        } finally {
+                            ReservationDAO.lock.unlock();
                         }
+                        w.println(reservationNumber);
+                        w.flush();
 
                     } else {
                         w.println("Error: Command not recognized");

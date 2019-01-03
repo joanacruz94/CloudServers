@@ -121,7 +121,7 @@ public class PrettyTable {
             
         }
         else{
-            // TODO: throw exception
+            //TODO: throw exception
             System.out.println("Invalid table: All rows must have the same number of columns!");
         }
         

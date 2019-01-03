@@ -3,26 +3,20 @@ package cloudservers.data;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class User {
 
     private String mail;
     private String password;
-    private float currentDebt;
     private Map<String, Reservation> reservations;
-
-    public User(){
-        this.mail = "";
-        this.password = "";
-        this.currentDebt = 0;
-        this.reservations = new HashMap<>();
-    }
+    private ReentrantLock lock;
 
     public User(String mail, String password){
         this.mail = mail;
         this.password = password;
-        this.currentDebt = 0;
         this.reservations = new HashMap<>();
+        this.lock = new ReentrantLock();
     }
 
     public boolean validPassword(String password){
@@ -30,9 +24,6 @@ public class User {
         return this.password.equals(password);
     }
     
-    public float getCurrentDebt(){
-        return this.currentDebt;
-    }
     
     public Map<String, Reservation> getReservations(){
         return this.reservations;
@@ -42,12 +33,16 @@ public class User {
         return this.reservations.get(numberReservation);
     }
     
-    public void addtoCurrentDebt(double debt){
-        this.currentDebt += debt;
-    }
-    
     public void addReservation(Reservation r){
         this.reservations.put(r.getId(), r);
+    }
+    
+    public double getCurrentDebt(){
+        double sum = 0;
+        for(Reservation r : this.reservations.values()){
+            sum += r.getCurrentCost();
+        }
+        return sum;
     }
     
     //public void closeReservation()
@@ -76,6 +71,14 @@ public class User {
             return false;
         }
         return true;
+    }
+
+    public void lock() {
+        this.lock.lock();
+    }
+    
+    public void unlock() {
+        this.lock.unlock();
     }
     
     

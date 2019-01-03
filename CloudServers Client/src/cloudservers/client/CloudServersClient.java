@@ -12,10 +12,9 @@ public class CloudServersClient {
         try {
             ConnectionResources cr = new ConnectionResources();
             System.out.println("Connection established to the server");
-            UI ui = new UI();
             String input, serverAnswer;
             do {
-                input = ui.showWelcomeMenu();
+                input = UI.showWelcomeMenu();
                 switch (input) {
                     case "login":
                         serverAnswer = enterLoginStage(cr);
@@ -107,7 +106,7 @@ public class CloudServersClient {
                     }
                     break;
                 case "serverAuction":
-                    // TODO
+                    //TODO
                     break;
                 case "refresh":
                     cr.writeToServer("serversList");
