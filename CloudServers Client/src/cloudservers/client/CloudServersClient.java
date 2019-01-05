@@ -138,13 +138,19 @@ public class CloudServersClient {
                     cr.writeToServer("deallocate " + input);
                     serverAnswer = cr.readFromServer();
                     if(serverAnswer.startsWith("Success")){
-                        System.out.println("You deallocated the "+input+" server successfully");
+                        System.out.println("You deallocated the " + input + " server successfully");
                         UI.waitForEnter();
                     }
                     else{
                         System.out.println(serverAnswer);
                         UI.waitForEnter();
                     }
+                    break;
+                case "cancel":
+                    input = UI.prompt("Insert the ID of the reservation of the server you want to cancel");
+                    cr.writeToServer("cancel " + input);
+                    serverAnswer = cr.readFromServer();
+                    System.out.println(serverAnswer);
                     break;
                 case "refresh":
                     cr.writeToServer("myServers");

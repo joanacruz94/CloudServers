@@ -113,7 +113,8 @@ public class UI {
     public static String showMyServersMenu() {
         List<Option> options = new ArrayList<>();
         options.add(new Option("Deallocate server", "1"));
-        options.add(new Option("Refresh my servers list", "2"));
+        options.add(new Option("Cancel reservation", "2"));
+        options.add(new Option("Refresh my servers list", "3"));
         options.add(new Option("Go Back", "0"));
         Menu myServers = new Menu(options, "My Servers Menu");
         myServers.show();
@@ -124,6 +125,9 @@ public class UI {
                 res = "deallocate";
                 break;
             case "2":
+                res = "cancel";
+                break;
+            case "3":
                 res = "refresh";
                 break;
             case "0":
