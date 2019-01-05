@@ -33,7 +33,7 @@ public class ServerInstanceDAO {
 
         for (String serverType : serverTypes) {
             servers = new ArrayList<>();
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 1; i++) {
                 servers.add(new ServerInstance(serverType, serverType + "-" + (i + 1), 1.99));
             }
             serverInstances.put(serverType, servers);
@@ -73,49 +73,21 @@ public class ServerInstanceDAO {
         return new PrettyTable(tableLines).toString();
     }
 
-    public void allocateServerToReservation(String serverType, Reservation reservation) throws InexistingServerTypeException {
-        List<ServerInstance> instances = null;
-        boolean alocated = false;
-        ServerInstanceDAO.lock.lock();
-        try {
-            instances = serverInstances.get(serverType);
-        } finally {
-            ServerInstanceDAO.lock.unlock();
-        }
+    public void allocateServerToReservation(ServerInstance server, Reservation reservation) {
+        reservation.allocate(server);
+        reservation.setState(ReservationState.ACTIVE);
+        reservation.getUser().addReservation(reservation);
+        this.getLock().lock();
+        this.freeInstancesCount.put(server.getName(), freeInstancesCount.get(server.getName())-1);
+        this.getLock().unlock();
 
-        if (instances != null) {
-            
-            OUTER:
-            for (ServerInstance server : instances) {
-                server.lock();
-                if (null != server.getState()) {
-                    switch (server.getState()) {
-                        case FREE:
-                            reservation.allocate(server);
-                            reservation.setState(ReservationState.ACTIVE);
-                            reservation.getUser().addReservation(reservation);
-                            this.freeInstancesCount.put(serverType, freeInstancesCount.get(serverType)-1);
-                            alocated = true;
-                            break;
-                        case BUSY_SPOT:
-                            //TODO
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                if(alocated) break;
-                server.unlock();
-            }
-        } else {
-            throw new InexistingServerTypeException();
-        }
     }
 
     public void deallocateReservation(String reservationNumber, User user) throws InexistingServerException {
         Reservation reservation = user.getReservation(reservationNumber);
         reservation.lock();
         reservation.deallocate();
+
         reservation.unlock();
     }
     
@@ -135,14 +107,34 @@ public class ServerInstanceDAO {
         return reservations;
     }
 
+    public String getListUserBids(User user){
+        List<List<String>> tableLines = new ArrayList<>();
+        tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Type", "Price per hour"})));
+
+        List<Reservation> bidsUser = BidsDAO.getInstance().getUserBids(user);
+
+        bidsUser.forEach((reservation) -> {
+            String id = reservation.getId();
+            ReservationState stateReservation = reservation.getState();
+            String type = reservation.getServerType();
+            String price = String.valueOf(reservation.getPricePerHour());
+            tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
+                    id,
+                    stateReservation.toString(),
+                    type,
+                    price
+            })));
+        });
+
+        return new PrettyTable(tableLines).toString();
+    }
+
     public String getListUserReservations(User user) {
         List<List<String>> tableLines = new ArrayList<>();
         tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Type", "Current Time", "Price per hour", "Current Cost"})));
 
         List<Reservation> reservationsList = listUserReservations(user);
-        System.out.println("Tenho reservas ativas" + reservationsList.size());
         List<Reservation> waitingReservation = listUserWaitingResevations(user);
-        System.out.println("Tenho reservas ativas" + waitingReservation.size());
         List<Reservation> allReservation = new ArrayList<>();
         reservationsList.forEach((reservation) -> {
             ServerInstance server = reservation.getServerInstance();

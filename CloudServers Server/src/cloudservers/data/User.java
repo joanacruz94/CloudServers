@@ -35,15 +35,15 @@ public class User {
     public Map<String, Reservation> getReservations(){
         return this.reservations;
     }
-    
+
     public Reservation getReservation(String numberReservation){
         return this.reservations.get(numberReservation);
     }
     
-    public void addReservation(Reservation r){
+    public void  addReservation(Reservation r){
         this.reservations.put(r.getId(), r);
     }
-    
+
     public double getCurrentDebt(){
         double sum = 0;
         for(Reservation r : this.reservations.values()){

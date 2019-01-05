@@ -52,7 +52,8 @@ public class UI {
         List<Option> options = new ArrayList<>();
         options.add(new Option("Display servers list", "1"));
         options.add(new Option("Display my servers", "2"));
-        options.add(new Option("Display current debt", "3"));
+        options.add(new Option("Display my bids", "3"));
+        options.add(new Option("Display current debt", "4"));
         options.add(new Option("Logout", "0"));
         Menu userMenu = new Menu(options, "User Menu");
         userMenu.show();
@@ -66,6 +67,9 @@ public class UI {
                 res = "myServers";
                 break;
             case "3":
+                res = "bidsList";
+                break;
+            case "4":
                 res = "currentDebt";
                 break;
             case "0":

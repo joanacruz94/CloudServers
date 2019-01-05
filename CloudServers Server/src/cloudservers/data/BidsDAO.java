@@ -2,10 +2,17 @@ package cloudservers.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BidsDAO {
 
-    private List<Bid> bids;
+    public Set<Reservation> waitingBids = new TreeSet<Reservation>();
+
+    public static ReentrantLock lock = new ReentrantLock();
+    public static Condition hasBids = lock.newCondition();
 
     private static BidsDAO ourInstance = new BidsDAO();
 
@@ -13,7 +20,13 @@ public class BidsDAO {
         return ourInstance;
     }
 
-    private BidsDAO() {
-        this.bids = new ArrayList<>();
+    public List<Reservation> getUserBids(User u){
+        List<Reservation> reservations = new ArrayList<>();
+        waitingBids.stream().filter((r) -> (r.getUser().equals(u))).forEach((r) -> {
+            reservations.add(r);
+        });
+        return reservations;
     }
+
+
 }

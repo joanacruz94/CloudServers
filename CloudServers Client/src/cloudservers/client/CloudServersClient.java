@@ -68,6 +68,12 @@ public class CloudServersClient {
                 case "myServers":
                     enterMyServersStage(cr);
                     break;
+                case "bidsList":
+                    cr.writeToServer("bidsList");
+                    serverAnswer = cr.readFromServer();
+                    serverAnswer = serverAnswer.replace(";", "\n");
+                    System.out.println(serverAnswer);
+                    break;
                 case "currentDebt":
                     cr.writeToServer(input);
                     serverAnswer = cr.readFromServer();
@@ -96,7 +102,7 @@ public class CloudServersClient {
                     cr.writeToServer("serverDemand " + input);
                     serverAnswer = cr.readFromServer();
                     if(!serverAnswer.startsWith("Error")){
-                        System.out.println("You allocated a "+input+" server successfully. You can manage your server in \"my servers\" menu.");
+                        System.out.println("You allocated a " + input + " server successfully. You can manage your server in \"my servers\" menu.");
                         System.out.println("Your reservation number is " + serverAnswer);
                         UI.waitForEnter();
                     }

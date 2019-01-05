@@ -5,10 +5,7 @@
  */
 package cloudservers.data;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -17,7 +14,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author joanacruz
  */
 public class ReservationDAO {
-    public Queue<Reservation> waitingReservations = new LinkedList<>();
+
+    public LinkedList<Reservation> waitingReservations = new LinkedList<>();
+
     public static ReentrantLock lock = new ReentrantLock();
     public static Condition hasReservations = lock.newCondition();
     

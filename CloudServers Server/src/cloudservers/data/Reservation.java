@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * @author joanacruz
  */
-public class Reservation {
+public class Reservation implements Comparable<Reservation> {
 
     private String id;
     private User user;
@@ -24,6 +24,9 @@ public class Reservation {
     private double pricePerHour;
     private String reservationType;
     private ReentrantLock lock;
+
+    public Reservation(){
+    }
 
     public Reservation(String id, User user, String serverType, double pricePerHour, String reservationType) {
         this.id = id;
@@ -60,6 +63,10 @@ public class Reservation {
 
     public String getServerType() {
         return serverType;
+    }
+
+    public double getPricePerHour() {
+        return this.pricePerHour;
     }
 
     public void setServerType(String serverType) {
@@ -129,6 +136,17 @@ public class Reservation {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public int compareTo(Reservation reservation){
+        int res;
+
+        if(this.getPricePerHour() > reservation.getPricePerHour()) res = 1;
+        else if(this.getPricePerHour() < reservation.getPricePerHour()) res = -1;
+        else res = 0;
+
+        return res;
     }
 
     public void deallocate() {
