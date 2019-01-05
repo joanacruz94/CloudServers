@@ -23,11 +23,9 @@ public class Server implements Runnable {
 
     private final Socket s;
     private User user;
-    private ReservationId reservationId;
 
-    public Server(Socket s, ReservationId r) {
+    public Server(Socket s) {
         this.s = s;
-        this.reservationId = r;
     }
 
     public void run() {
@@ -35,6 +33,7 @@ public class Server implements Runnable {
             UserDAO users = UserDAO.getInstance();
             ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
             ReservationDAO reservations = ReservationDAO.getInstance();
+            ReservationID reservationID = ReservationID.getInstance();
 
             PrintWriter w = new PrintWriter(s.getOutputStream());
             BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -119,7 +118,7 @@ public class Server implements Runnable {
                     } else if (line.matches("serverDemand [SML][1-2]")) {
                         String[] tokens = line.split(" ");
                         String serverType = tokens[1];
-                        String reservationNumber = reservationId.nextId();
+                        String reservationNumber = String.valueOf(reservationID.nextID());
                         Reservation reservation = new Reservation(reservationNumber, user, serverType, 0, "DEMAND");
                         ReservationDAO.lock.lock();
                         try {
