@@ -12,6 +12,13 @@ public class User {
     private Map<String, Reservation> reservations;
     private ReentrantLock lock;
 
+    public User(){
+        this.mail = "";
+        this.password = "";
+        this.reservations = new HashMap<>();
+        this.lock = new ReentrantLock();
+    }
+
     public User(String mail, String password){
         this.mail = mail;
         this.password = password;

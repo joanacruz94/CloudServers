@@ -13,8 +13,7 @@ public class CloudServer{
         while (true) {
             Socket s = ss.accept();
             System.out.println("New connection established");
-            ReservationId reservationId = new ReservationId();
-            new Thread(new Server(s, reservationId)).start();
+            new Thread(new Server(s)).start();
         }
     }
 }
