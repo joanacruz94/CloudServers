@@ -62,9 +62,31 @@ public class Allocator implements Runnable {
                     reservationDAO.removeFromList(allocatedReservations);
 
                 }
-
+            }finally {
+                    reservationsLock.unlock();
+            }
+            bidsLock.lock();
+            try {
+                List<Reservation> allocatedReservations = new ArrayList<>();
+                for (Reservation bid : bidsDAO.waitingBids) {
+                    String bidServerType = bid.getServerType();
+                    serverInstanceDAO.getLock().lock();
+                    List<ServerInstance> instanceOfType = serverInstanceDAO.serverInstances.get(bidServerType);
+                    serverInstanceDAO.getLock().unlock();
+                    for (ServerInstance serverInstance : instanceOfType) {
+                        serverInstance.lock();
+                        if (serverInstance.getState() == ServerState.FREE) {
+                            serverInstanceDAO.allocateServerToReservation(serverInstance, bid);
+                            allocatedReservations.add(bid);
+                            serverInstance.unlock();
+                            break;
+                        }
+                        serverInstance.unlock();
+                    }
+                    bidsDAO.removeFromList(allocatedReservations);
+                }
             } finally {
-                reservationsLock.unlock();
+                bidsLock.unlock();
             }
             try {
                 availableServersLock.lock();

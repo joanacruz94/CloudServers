@@ -20,6 +20,11 @@ public class BidsDAO {
         return ourInstance;
     }
 
+    public void removeFromList(List<Reservation> reservations){
+        waitingBids.removeAll(reservations);
+    }
+
+
     public List<Reservation> getUserBids(User u){
         List<Reservation> reservations = new ArrayList<>();
         waitingBids.stream().filter((r) -> (r.getUser().equals(u))).forEach((r) -> {

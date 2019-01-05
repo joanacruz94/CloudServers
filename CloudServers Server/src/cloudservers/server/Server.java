@@ -155,17 +155,12 @@ public class Server implements Runnable {
                         System.out.println(reservationNumber);
                         ReservationDAO.lock.lock();
                         try {
-                            System.out.println("estou aqui");
                             Reservation res = new Reservation();
                             for (Reservation result : reservations.waitingReservations) {
                                 if (result.getId().equals(reservationNumber))
                                     res = result;
                             }
-                            System.out.println("estou aqui 1");
-
                             reservations.waitingReservations.remove(res);
-                            System.out.println("estou aqui 2");
-
                         } finally {
                             ReservationDAO.lock.unlock();
                         }
