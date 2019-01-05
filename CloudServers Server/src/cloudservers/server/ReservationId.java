@@ -3,12 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package cloudservers.data;
+package cloudservers.server;
 
 /**
  *
  * @author joanacruz
  */
-public enum ServerState {
-    FREE, BUSY_DEMAND, BUSY_SPOT
+public class ReservationId {
+    private int id=1;
+    
+    synchronized String nextId(){
+        return String.valueOf(id++);
+    }
+    
 }

@@ -12,10 +12,9 @@ public class CloudServersClient {
         try {
             ConnectionResources cr = new ConnectionResources();
             System.out.println("Connection established to the server");
-            UI ui = new UI();
             String input, serverAnswer;
             do {
-                input = ui.showWelcomeMenu();
+                input = UI.showWelcomeMenu();
                 switch (input) {
                     case "login":
                         serverAnswer = enterLoginStage(cr);
@@ -70,7 +69,9 @@ public class CloudServersClient {
                     enterMyServersStage(cr);
                     break;
                 case "currentDebt":
-                    // TODO
+                    cr.writeToServer(input);
+                    serverAnswer = cr.readFromServer();
+                    System.out.println(serverAnswer);
                     break;
                 case "logout":
                     cr.writeToServer(input);
@@ -94,8 +95,9 @@ public class CloudServersClient {
                     input = UI.prompt("Write the type of the server you want to allocate");
                     cr.writeToServer("serverDemand " + input);
                     serverAnswer = cr.readFromServer();
-                    if(serverAnswer.startsWith("Success")){
+                    if(!serverAnswer.startsWith("Error")){
                         System.out.println("You allocated a "+input+" server successfully. You can manage your server in \"my servers\" menu.");
+                        System.out.println("Your reservation number is " + serverAnswer);
                         UI.waitForEnter();
                     }
                     else{
@@ -104,7 +106,10 @@ public class CloudServersClient {
                     }
                     break;
                 case "serverAuction":
-                    // TODO
+                    input = UI.showAuctionServerMenu();
+                    cr.writeToServer("serverAuction " + input);
+                    serverAnswer = cr.readFromServer();
+                    System.out.println(serverAnswer);
                     break;
                 case "refresh":
                     cr.writeToServer("serversList");
@@ -123,16 +128,34 @@ public class CloudServersClient {
         String input, serverAnswer;
         cr.writeToServer("myServers");
         serverAnswer = cr.readFromServer();
+        serverAnswer = serverAnswer.replace(";", "\n");
         System.out.println(serverAnswer);
         do {
-            input = UI.showGetServersMenu();
+            input = UI.showMyServersMenu();
             switch (input) {
+                case "deallocate":
+                    input = UI.prompt("Insert the ID of the reservation of the server you want to deallocate");
+                    cr.writeToServer("deallocate " + input);
+                    serverAnswer = cr.readFromServer();
+                    if(serverAnswer.startsWith("Success")){
+                        System.out.println("You deallocated the "+input+" server successfully");
+                        UI.waitForEnter();
+                    }
+                    else{
+                        System.out.println(serverAnswer);
+                        UI.waitForEnter();
+                    }
+                    break;
+                case "refresh":
+                    cr.writeToServer("myServers");
+                    serverAnswer = cr.readFromServer();
+                    serverAnswer = serverAnswer.replace(";", "\n");
+                    System.out.println(serverAnswer);
+                    break;
                 case "goBack":
                     break;
             }
         } while (!input.equals("goBack"));
-
-    }
-    
+    }  
     
 }

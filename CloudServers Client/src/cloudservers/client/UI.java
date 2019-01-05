@@ -109,6 +109,33 @@ public class UI {
         }
         return res;
     }
+    
+    public static String showMyServersMenu() {
+        List<Option> options = new ArrayList<>();
+        options.add(new Option("Deallocate server", "1"));
+        options.add(new Option("Refresh my servers list", "2"));
+        options.add(new Option("Go Back", "0"));
+        Menu myServers = new Menu(options, "My Servers Menu");
+        myServers.show();
+        String selectedOption = readLine();
+        String res = null;
+        switch (selectedOption) {
+            case "1":
+                res = "deallocate";
+                break;
+            case "2":
+                res = "refresh";
+                break;
+            case "0":
+                res = "goBack";
+                break;
+            default:
+                System.out.println("Please select one of the available options");
+                waitForEnter();
+                res = showMyServersMenu();
+        }
+        return res;
+    }
 
     public static String showLoginMenu() {
         showHeader("Login");
@@ -117,7 +144,7 @@ public class UI {
         System.out.println("Insert a password ");
         String password = scanner.nextLine();
 
-        // TODO : check the length of the provided fields
+        //TODO : check the length of the provided fields
         return email + " " + password;
     }
 
@@ -128,8 +155,18 @@ public class UI {
         System.out.println("Insert a password ");
         String password = scanner.nextLine();
 
-        // TODO : check the length of the provided fields
+        //TODO : check the length of the provided fields
         return email + " " + password;
+    }
+    
+    public static String showAuctionServerMenu() {
+        System.out.println("Write the type of the server you want to allocate");
+        String serverType = scanner.nextLine();
+        System.out.println("How much would you like to pay");
+        String price = scanner.nextLine();
+
+        //TODO : check the length of the provided fields
+        return serverType + " " + price;
     }
 
     public static void waitForEnter() {

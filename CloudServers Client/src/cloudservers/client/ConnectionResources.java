@@ -13,7 +13,7 @@ import java.net.Socket;
 
 /**
  *
- * @author Samuel
+ * @author joanacruz
  */
 public class ConnectionResources {
     private Socket s;

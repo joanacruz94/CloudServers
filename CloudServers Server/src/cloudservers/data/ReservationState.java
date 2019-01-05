@@ -9,6 +9,6 @@ package cloudservers.data;
  *
  * @author joanacruz
  */
-public enum ServerState {
-    FREE, BUSY_DEMAND, BUSY_SPOT
+public enum ReservationState {
+    WAITING, ACTIVE, FINISHED, CANCELED
 }

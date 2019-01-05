@@ -7,7 +7,7 @@ package cloudservers.exceptions;
 
 /**
  *
- * @author Samuel
+ * @author joanacruz
  */
 public class InexistingServerTypeException extends Exception {
 

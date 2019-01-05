@@ -1,9 +1,12 @@
 package cloudservers.server;
 
+import cloudservers.data.Reservation;
+import cloudservers.data.ReservationDAO;
 import cloudservers.data.ServerInstanceDAO;
 import cloudservers.data.User;
 import cloudservers.data.UserDAO;
 import cloudservers.exceptions.EmailAlreadyTakenException;
+import cloudservers.exceptions.InexistingServerException;
 import cloudservers.exceptions.InexistingServerTypeException;
 import cloudservers.exceptions.NoServersAvailableException;
 import cloudservers.exceptions.NotExistantUserException;
@@ -20,15 +23,18 @@ public class Server implements Runnable {
 
     private final Socket s;
     private User user;
+    private ReservationId reservationId;
 
-    public Server(Socket s) {
+    public Server(Socket s, ReservationId r) {
         this.s = s;
+        this.reservationId = r;
     }
 
     public void run() {
         try {
             UserDAO users = UserDAO.getInstance();
             ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
+            ReservationDAO reservations = ReservationDAO.getInstance();
 
             PrintWriter w = new PrintWriter(s.getOutputStream());
             BufferedReader r = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -83,30 +89,70 @@ public class Server implements Runnable {
                         w.flush();
                     } // MY SERVERS
                     else if (line.equals("myServers")) {
-                        w.println();
+                        w.println(servers.getListUserReservations(this.user).replace("\n", ";"));
                         w.flush();
                     } // CURRENT DEBT
                     else if (line.equals("currentDebt")) {
-                        w.println();
+                        //TODO
+                        this.user.lock();
+                        double currentDebt = this.user.getCurrentDebt();
+                        this.user.unlock();
+                        w.println(String.valueOf(currentDebt));
                         w.flush();
-                    }
-                    else if(line.matches("serverDemand [SML][1-2]")) {
+                    } else if (line.matches("deallocate [0-9]+")) {
                         String[] tokens = line.split(" ");
-                        String serverType = tokens[1];
+                        String reservationNumber = tokens[1];
                         try {
-                            servers.allocateServerToUser(user, serverType);
+                            servers.deallocateReservation(reservationNumber, this.user);
+                            ServerInstanceDAO.lock.lock();
+                            try {
+                                ServerInstanceDAO.serversAvailable.signalAll();
+                            } finally {
+                                ServerInstanceDAO.lock.unlock();
+                            }
                             w.println("Success");
                             w.flush();
-                        } catch (NoServersAvailableException ex) {
-                            w.println("Error: No servers of the requested type available at the moment");
-                            w.flush();
-                        } catch (InexistingServerTypeException ex) {
-                            w.println("Error: Please provide a valid server type");
+                        } catch (InexistingServerException ex) {
+                            w.println("Error: Please provide a valid server ID");
                             w.flush();
                         }
-                        
+                    } else if (line.matches("serverDemand [SML][1-2]")) {
+                        String[] tokens = line.split(" ");
+                        String serverType = tokens[1];
+                        String reservationNumber = reservationId.nextId();
+                        Reservation reservation = new Reservation(reservationNumber, user, serverType, 0, "DEMAND");
+                        ReservationDAO.lock.lock();
+                        try {
+                            reservations.waitingReservations.add(reservation);
+                            ReservationDAO.hasReservations.signalAll();
+                        } finally {
+                            ReservationDAO.lock.unlock();
+                        }
+                        w.println(reservationNumber);
+                        w.flush();
+
+                    } else if (line.matches("serverAuction [SML][1-2] [0-9]+")) {
+                        /*String[] tokens = line.split(" ");
+                        String serverType = tokens[1];
+                        String reservationNumber = reservationId.nextId();
+                        Reservation reservation = new Reservation(reservationNumber, user, serverType, 0, "DEMAND");
+                        ReservationDAO.lock.lock();
+                        try {
+                            reservations.waitingReservations.add(reservation);
+                            ReservationDAO.hasReservations.signalAll();
+                        } finally {
+                            ReservationDAO.lock.unlock();
+                        }
+                        w.println(reservationNumber);
+                        w.flush();
+*/
+                    }
+                    else {
+                        w.println("Error: Command not recognized");
+                        w.flush();
                     }
                 }
+
             } while (!line.equals("exit"));
 
             w.flush();
