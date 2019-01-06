@@ -51,7 +51,7 @@ public class Allocator implements Runnable {
                                         users.lock();
                                         try {
                                             users.notificationsUsers.get(user.getEmail()).add(":Your reservation with the ID " + idReservationDeallocate + " was canceled because other user demand reservation");
-                                            users.hasNotifications.signal();
+                                            users.hasNotifications.signalAll();
                                         } finally {
                                             users.lock.unlock();
                                         }
@@ -101,7 +101,7 @@ public class Allocator implements Runnable {
             try {
                 servers.lock();
                 try {
-                    while (servers.freeServersCount() == 0) {
+                    while (servers.freeServersCount() + servers.busySpotServersCount()== 0) {
                         serversAvailable.await();
                     }
                 } finally {

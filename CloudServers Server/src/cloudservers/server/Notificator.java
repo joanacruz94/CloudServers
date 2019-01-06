@@ -12,6 +12,7 @@ package cloudservers.server;
 import cloudservers.data.UserDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
+import static java.lang.Thread.interrupted;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;

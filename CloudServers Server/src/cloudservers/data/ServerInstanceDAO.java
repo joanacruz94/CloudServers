@@ -191,6 +191,15 @@ public class ServerInstanceDAO {
         return sum;
     }
     
+    public int busySpotServersCount(){
+        int sum = 0;
+        
+        for(String type : serverInstances.keySet()){
+            sum+= busySpotServersCount(type);
+        }
+        return sum;
+    }
+    
     public int busySpotServersCount(String serverType){
         int sum = 0;
         List<ServerInstance> servers = this.serverInstances.get(serverType);

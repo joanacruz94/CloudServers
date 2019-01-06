@@ -9,11 +9,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server implements Runnable {
 
     private final Socket s;
     private User user;
+    private Thread notificator;
 
     public Server(Socket s) {
         this.s = s;
@@ -21,7 +24,7 @@ public class Server implements Runnable {
 
     public void run() {
         try {
-            
+
             UserDAO users = UserDAO.getInstance();
             ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
             DemandDAO demands = DemandDAO.getInstance();
@@ -47,7 +50,8 @@ public class Server implements Runnable {
                         if (success) {
                             try {
                                 this.user = users.getUserByEmail(email);
-                                new Thread(new Notificator(s, email)).start();
+                                this.notificator = new Thread(new Notificator(s, email));
+                                this.notificator.start();
                                 w.println("Success: User logged in successfully");
                                 w.flush();
                             } catch (NotExistantUserException e) {
@@ -75,6 +79,8 @@ public class Server implements Runnable {
                     } // LOGOUT
                     else if (line.equals("logout")) {
                         this.user = null;
+                        this.notificator.interrupt();
+                        this.notificator = null;
                         w.println("Success: User logged out successfully");
                         w.flush();
                     } // BIDS LIST
@@ -174,11 +180,10 @@ public class Server implements Runnable {
                         } finally {
                             demands.unlock();
                         }
-                        if(exist){
+                        if (exist) {
                             w.println("Sucess: Reservation canceled");
                             w.flush();
-                        }
-                        else{
+                        } else {
                             w.println("Error: Please provide a valid reservation ID");
                             w.flush();
                         }
@@ -200,11 +205,10 @@ public class Server implements Runnable {
                         } finally {
                             bids.unlock();
                         }
-                        if(exist){
+                        if (exist) {
                             w.println("Sucess: Reservation canceled");
                             w.flush();
-                        }
-                        else{
+                        } else {
                             w.println("Error: Please provide a valid reservation ID");
                             w.flush();
                         }
@@ -222,5 +226,3 @@ public class Server implements Runnable {
         }
     }
 }
-
-
