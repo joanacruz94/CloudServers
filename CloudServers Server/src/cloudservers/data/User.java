@@ -1,5 +1,6 @@
 package cloudservers.data;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +51,12 @@ public class User {
     }
     
     public double getCurrentDebt(){
+        DecimalFormat df = new DecimalFormat("#.00");
         double sum = 0;
         for(Reservation r : this.reservations.values()){
             sum += r.getCurrentCost();
         }
-        return sum;
+        return Double.parseDouble(df.format(sum));
     }    
     
     @Override

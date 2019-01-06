@@ -5,6 +5,7 @@
  */
 package cloudservers.data;
 
+import java.text.DecimalFormat;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -111,7 +112,7 @@ public class Reservation implements Comparable<Reservation> {
 
     public double getCurrentCost() {
         //TODO: the price per hour will change when auctions are implemented
-
+        DecimalFormat df = new DecimalFormat("#.00");
         long timeInMilis = getSpentTimeMilis();
 
         double timeInHours = ((Number) timeInMilis).doubleValue() / 1000 / 3600;
@@ -121,7 +122,7 @@ public class Reservation implements Comparable<Reservation> {
         } else {
             pricePerHour = this.serverInstance.getPricePerHour();
         }
-        return timeInHours * pricePerHour;
+        return Double.parseDouble(df.format(timeInHours * pricePerHour));
     }
 
    
