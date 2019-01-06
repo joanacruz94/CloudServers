@@ -9,13 +9,13 @@ package cloudservers.exceptions;
  *
  * @author joanacruz
  */
-public class InexistingServerException extends Exception {
+public class InexistingReservationNumberException extends Exception {
 
     /**
      * Creates a new instance of <code>InexistingServerException</code> without
      * detail message.
      */
-    public InexistingServerException() {
+    public InexistingReservationNumberException() {
     }
 
     /**
@@ -24,7 +24,7 @@ public class InexistingServerException extends Exception {
      *
      * @param msg the detail message.
      */
-    public InexistingServerException(String msg) {
+    public InexistingReservationNumberException(String msg) {
         super(msg);
     }
 }

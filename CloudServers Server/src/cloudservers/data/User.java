@@ -43,6 +43,7 @@ public class User {
     public void  addReservation(Reservation r){
         this.reservations.put(r.getId(), r);
     }
+    
 
     public double getCurrentDebt(){
         double sum = 0;

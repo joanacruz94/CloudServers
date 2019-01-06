@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import cloudservers.exceptions.InexistingServerException;
+import cloudservers.exceptions.InexistingReservationNumberException;
 import java.util.Arrays;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -83,17 +83,23 @@ public class ServerInstanceDAO {
 
     }
 
-    public void deallocateReservation(String reservationNumber, User user) throws InexistingServerException {
-        Reservation reservation = user.getReservation(reservationNumber);
-        reservation.lock();
-        reservation.deallocate();
+    public void deallocateReservation(String reservationNumber, User user) throws InexistingReservationNumberException{
+        boolean reservationExist = user.getReservations().containsKey(reservationNumber);
         
-        reservation.unlock();
-        this.getLock().lock();
-        try {
-            this.freeInstancesCount.put(reservation.getServerType(), freeInstancesCount.get(reservation.getServerType())+1);
-        } finally {
-            this.getLock().unlock();
+        if(reservationExist){
+            Reservation reservation = user.getReservation(reservationNumber);
+            reservation.lock();
+            reservation.deallocate();        
+            reservation.unlock();
+            this.getLock().lock();
+            try {
+                this.freeInstancesCount.put(reservation.getServerType(), freeInstancesCount.get(reservation.getServerType())+1);
+            } finally {
+                this.getLock().unlock();
+            }
+        }
+        else{
+            throw new InexistingReservationNumberException();
         }
     }
     

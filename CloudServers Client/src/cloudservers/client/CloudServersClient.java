@@ -98,12 +98,11 @@ public class CloudServersClient {
                     input = UI.prompt("Write the type of the server you want to allocate");
                     cr.writeToServer("serverDemand " + input);
                     serverAnswer = cr.readFromServer();
-                    if(!serverAnswer.startsWith("Error")){
+                    if (!serverAnswer.startsWith("Error")) {
                         //System.out.println("You allocated a " + input + " server successfully. You can manage your server in \"my servers\" menu.");
                         System.out.println("Your reservation number is " + serverAnswer);
                         UI.waitForEnter();
-                    }
-                    else{
+                    } else {
                         System.out.println(serverAnswer);
                         UI.waitForEnter();
                     }
@@ -126,7 +125,7 @@ public class CloudServersClient {
         } while (!input.equals("goBack"));
 
     }
-    
+
     private static void enterMyServersStage(ConnectionResources cr) throws IOException {
         String input, serverAnswer;
         cr.writeToServer("myServers");
@@ -140,11 +139,10 @@ public class CloudServersClient {
                     input = UI.prompt("Insert the ID of the reservation of the server you want to deallocate");
                     cr.writeToServer("deallocate " + input);
                     serverAnswer = cr.readFromServer();
-                    if(serverAnswer.startsWith("Success")){
-                        System.out.println("You deallocated the " + input + " server successfully");
+                    if (serverAnswer.startsWith("Success")) {
+                        System.out.println("You deallocated the server successfully");
                         UI.waitForEnter();
-                    }
-                    else{
+                    } else {
                         System.out.println(serverAnswer);
                         UI.waitForEnter();
                     }
@@ -165,7 +163,7 @@ public class CloudServersClient {
                     break;
             }
         } while (!input.equals("goBack"));
-    } 
+    }
     
     private static void enterMyBidsStage(ConnectionResources cr) throws IOException {
         String input, serverAnswer;
@@ -192,6 +190,6 @@ public class CloudServersClient {
                     break;
             }
         } while (!input.equals("goBack"));
-    } 
-    
+    }
+
 }
