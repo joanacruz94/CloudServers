@@ -92,7 +92,7 @@ public class ServerInstanceDAO {
     }
     
     public List<Reservation> listUserWaitingResevations(User user){
-        return ReservationDAO.getInstance().getUserWaitingReservations(user);
+        return DemandDAO.getInstance().getUserWaitingReservations(user);
     }
     
     public List<Reservation> listUserReservations(User user) {

@@ -12,7 +12,6 @@ public class BidsDAO {
     public Set<Reservation> waitingBids = new TreeSet<Reservation>();
 
     public static ReentrantLock lock = new ReentrantLock();
-    public static Condition hasBids = lock.newCondition();
 
     private static BidsDAO ourInstance = new BidsDAO();
 

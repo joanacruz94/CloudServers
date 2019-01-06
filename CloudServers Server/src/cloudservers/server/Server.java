@@ -28,7 +28,7 @@ public class Server implements Runnable {
         try {
             UserDAO users = UserDAO.getInstance();
             ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
-            ReservationDAO reservations = ReservationDAO.getInstance();
+            DemandDAO reservations = DemandDAO.getInstance();
             BidsDAO bids = BidsDAO.getInstance();
             ReservationID reservationID = ReservationID.getInstance();
 
@@ -122,12 +122,17 @@ public class Server implements Runnable {
                         String serverType = tokens[1];
                         String reservationNumber = String.valueOf(reservationID.nextID());
                         Reservation reservation = new Reservation(reservationNumber, user, serverType, 0, "DEMAND");
-                        ReservationDAO.lock.lock();
+                        DemandDAO.lock.lock();
                         try {
                             reservations.waitingReservations.add(reservation);
-                            ReservationDAO.hasReservations.signalAll();
+                            ReservationDAO.lock.lock();
+                            try {
+                                ReservationDAO.hasReservations.signalAll();
+                            } finally {
+                                ReservationDAO.lock.unlock();
+                            }
                         } finally {
-                            ReservationDAO.lock.unlock();
+                            DemandDAO.lock.unlock();
                         }
                         w.println(reservationNumber);
                         w.flush();
@@ -135,13 +140,18 @@ public class Server implements Runnable {
                     } else if (line.matches("serverAuction [SML][1-2] [0-9]+(\\.[0-9]+)?")) {
                         String[] tokens = line.split(" ");
                         String serverType = tokens[1];
-                        double priceAuction = Double.parseDouble(tokens[2]);
+                        double priceBid = Double.parseDouble(tokens[2]);
                         String reservationNumber = String.valueOf(reservationID.nextID());
-                        Reservation reservation = new Reservation(reservationNumber, user, serverType, priceAuction, "SPOT");
+                        Reservation reservation = new Reservation(reservationNumber, user, serverType, priceBid, "SPOT");
                         BidsDAO.lock.lock();
                         try {
                             bids.waitingBids.add(reservation);
-                            BidsDAO.hasBids.signalAll();
+                            ReservationDAO.lock.lock();
+                            try {
+                                ReservationDAO.hasReservations.signalAll();
+                            } finally {
+                                ReservationDAO.lock.unlock();
+                            }
                         } finally {
                             BidsDAO.lock.unlock();
                         }
@@ -153,7 +163,7 @@ public class Server implements Runnable {
                         String[] tokens = line.split(" ");
                         String reservationNumber = tokens[1];
                         System.out.println(reservationNumber);
-                        ReservationDAO.lock.lock();
+                        DemandDAO.lock.lock();
                         try {
                             Reservation res = new Reservation();
                             for (Reservation result : reservations.waitingReservations) {
@@ -162,7 +172,7 @@ public class Server implements Runnable {
                             }
                             reservations.waitingReservations.remove(res);
                         } finally {
-                            ReservationDAO.lock.unlock();
+                            DemandDAO.lock.unlock();
                         }
                         w.println("Sucess");
                         w.flush();

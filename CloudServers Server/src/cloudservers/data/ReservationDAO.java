@@ -5,7 +5,6 @@
  */
 package cloudservers.data;
 
-import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -14,9 +13,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author joanacruz
  */
 public class ReservationDAO {
-
-    public LinkedList<Reservation> waitingReservations = new LinkedList<>();
-
     public static ReentrantLock lock = new ReentrantLock();
     public static Condition hasReservations = lock.newCondition();
     
@@ -26,16 +22,13 @@ public class ReservationDAO {
         return ourInstance;
     }
     
-    public void removeFromList(List<Reservation> reservations){
-        waitingReservations.removeAll(reservations);
+    public static boolean hasReservations(){
+        boolean result;
+        DemandDAO.lock.lock();
+        BidsDAO.lock.lock();
+        result = !(DemandDAO.getInstance().waitingReservations.isEmpty() && BidsDAO.getInstance().waitingBids.isEmpty());
+        DemandDAO.lock.unlock();
+        BidsDAO.lock.unlock();
+        return result;
     }
-    
-    public List<Reservation> getUserWaitingReservations(User u){
-        List<Reservation> reservations = new ArrayList<>();
-        waitingReservations.stream().filter((r) -> (r.getUser().equals(u))).forEach((r) -> {
-            reservations.add(r);
-        });
-        return reservations;
-    }
-
 }
