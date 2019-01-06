@@ -5,10 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import cloudservers.exceptions.InexistingServerException;
-import cloudservers.exceptions.InexistingServerTypeException;
-import cloudservers.exceptions.NoServersAvailableException;
 import java.util.Arrays;
-import java.util.Map.Entry;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,14 +27,14 @@ public class ServerInstanceDAO {
         freeInstancesCount = new HashMap<>();
         ArrayList<ServerInstance> servers = new ArrayList<>();
         String[] serverTypes = {"S1", "S2", "M1", "M2", "L1", "L2"};
-
+        int nInstancesOfEach = 1;
         for (String serverType : serverTypes) {
             servers = new ArrayList<>();
-            for (int i = 0; i < 1; i++) {
+            for (int i = 0; i < nInstancesOfEach; i++) {
                 servers.add(new ServerInstance(serverType, serverType + "-" + (i + 1), 1.99));
             }
             serverInstances.put(serverType, servers);
-            freeInstancesCount.put(serverType, 5);
+            freeInstancesCount.put(serverType, nInstancesOfEach);
             
         }
     }
@@ -78,8 +75,11 @@ public class ServerInstanceDAO {
         reservation.setState(ReservationState.ACTIVE);
         reservation.getUser().addReservation(reservation);
         this.getLock().lock();
-        this.freeInstancesCount.put(server.getName(), freeInstancesCount.get(server.getName())-1);
-        this.getLock().unlock();
+        try {
+            this.freeInstancesCount.put(server.getName(), freeInstancesCount.get(server.getName())-1);
+        } finally {
+            this.getLock().unlock();
+        }
 
     }
 
@@ -87,8 +87,14 @@ public class ServerInstanceDAO {
         Reservation reservation = user.getReservation(reservationNumber);
         reservation.lock();
         reservation.deallocate();
-
+        
         reservation.unlock();
+        this.getLock().lock();
+        try {
+            this.freeInstancesCount.put(reservation.getServerType(), freeInstancesCount.get(reservation.getServerType())+1);
+        } finally {
+            this.getLock().unlock();
+        }
     }
     
     public List<Reservation> listUserWaitingResevations(User user){

@@ -4,7 +4,6 @@ import cloudservers.data.*;
 import cloudservers.exceptions.EmailAlreadyTakenException;
 import cloudservers.exceptions.InexistingServerException;
 import cloudservers.exceptions.InexistingServerTypeException;
-import cloudservers.exceptions.NoServersAvailableException;
 import cloudservers.exceptions.NotExistantUserException;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -138,18 +137,28 @@ public class Server implements Runnable {
                         w.flush();
 
                     } else if (line.matches("serverAuction [SML][1-2] [0-9]+(\\.[0-9]+)?")) {
+                        System.out.println("Recebi bid");
                         String[] tokens = line.split(" ");
                         String serverType = tokens[1];
                         double priceBid = Double.parseDouble(tokens[2]);
                         String reservationNumber = String.valueOf(reservationID.nextID());
                         Reservation reservation = new Reservation(reservationNumber, user, serverType, priceBid, "SPOT");
                         BidsDAO.lock.lock();
+                        System.out.println("Recebi bid 1");
+
                         try {
+                            System.out.println("Recebi bid 2");
+
                             bids.waitingBids.add(reservation);
+                            System.out.println("Recebi bid 3");
+
                             ReservationDAO.lock.lock();
+                            System.out.println("Recebi bid 4");
                             try {
+                                System.out.println("Recebi bid 5");
                                 ReservationDAO.hasReservations.signalAll();
                             } finally {
+                                System.out.println("Recebi bid 6");
                                 ReservationDAO.lock.unlock();
                             }
                         } finally {
@@ -159,16 +168,15 @@ public class Server implements Runnable {
                         w.flush();
 
                     } else if (line.matches("cancel [0-9]+")) {
-                        System.out.println("entrei");
                         String[] tokens = line.split(" ");
                         String reservationNumber = tokens[1];
-                        System.out.println(reservationNumber);
                         DemandDAO.lock.lock();
                         try {
                             Reservation res = new Reservation();
                             for (Reservation result : reservations.waitingReservations) {
-                                if (result.getId().equals(reservationNumber))
+                                if (result.getId().equals(reservationNumber)) {
                                     res = result;
+                                }
                             }
                             reservations.waitingReservations.remove(res);
                         } finally {
@@ -184,7 +192,6 @@ public class Server implements Runnable {
                 }
 
             } while (!line.equals("exit"));
-
 
             w.flush();
             s.close();

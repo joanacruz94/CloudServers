@@ -10,5 +10,5 @@ package cloudservers.data;
  * @author joanacruz
  */
 public enum ReservationState {
-    WAITING, ACTIVE, FINISHED, CANCELED
+    WAITING, ACTIVE, FINISHED
 }

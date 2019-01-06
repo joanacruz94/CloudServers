@@ -102,7 +102,7 @@ public class CloudServersClient {
                     cr.writeToServer("serverDemand " + input);
                     serverAnswer = cr.readFromServer();
                     if(!serverAnswer.startsWith("Error")){
-                        System.out.println("You allocated a " + input + " server successfully. You can manage your server in \"my servers\" menu.");
+                        //System.out.println("You allocated a " + input + " server successfully. You can manage your server in \"my servers\" menu.");
                         System.out.println("Your reservation number is " + serverAnswer);
                         UI.waitForEnter();
                     }
@@ -115,7 +115,7 @@ public class CloudServersClient {
                     input = UI.showAuctionServerMenu();
                     cr.writeToServer("serverAuction " + input);
                     serverAnswer = cr.readFromServer();
-                    System.out.println(serverAnswer);
+                    System.out.println("Your reservation number is " + serverAnswer);
                     break;
                 case "refresh":
                     cr.writeToServer("serversList");

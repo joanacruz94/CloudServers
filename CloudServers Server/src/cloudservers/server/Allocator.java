@@ -29,44 +29,29 @@ public class Allocator implements Runnable {
         ReentrantLock availableServersLock = ServerInstanceDAO.lock;
         Condition hasReservations = ReservationDAO.hasReservations;
         Condition serversAvailable = ServerInstanceDAO.serversAvailable;
+
         while (true) {
             demandsLock.lock();
             try {
-
                 List<Reservation> allocatedReservations = new ArrayList<>();
-                System.out.println("aloooocater um gajo12");
-
                 for (Reservation reservation : demandDAO.waitingReservations) {
-                    System.out.println("aloooocater um gajo13");
-
-                    String reservationServerType = reservation.getServerType();
-                    System.out.println("aloooocater um gajo14");
-
+                    String demandServerType = reservation.getServerType();
                     serverInstanceDAO.getLock().lock();
-                    System.out.println("aloooocater um gajo15");
-
-                    List<ServerInstance> instancesOfType = serverInstanceDAO.serverInstances.get(reservationServerType);
-                    System.out.println("aloooocater um gajo16");
-
+                    List<ServerInstance> instancesOfType = serverInstanceDAO.serverInstances.get(demandServerType);
                     serverInstanceDAO.getLock().unlock();
-                    System.out.println("aloooocater um gajo");
-
                     for (ServerInstance serverInstance : instancesOfType) {
                         serverInstance.lock();
-                        System.out.println("aloooocater um 22");
-
                         if (serverInstance.getState() == ServerState.FREE) {
-                            System.out.println("aloquei um gajo");
                             serverInstanceDAO.allocateServerToReservation(serverInstance, reservation);
+                            
                             allocatedReservations.add(reservation);
                             serverInstance.unlock();
                             break;
                         }
                         serverInstance.unlock();
                     }
-                    demandDAO.removeFromList(allocatedReservations);
-
                 }
+                demandDAO.removeFromList(allocatedReservations);
             } finally {
                 demandsLock.unlock();
             }
@@ -78,18 +63,21 @@ public class Allocator implements Runnable {
                     serverInstanceDAO.getLock().lock();
                     List<ServerInstance> instanceOfType = serverInstanceDAO.serverInstances.get(bidServerType);
                     serverInstanceDAO.getLock().unlock();
+
                     for (ServerInstance serverInstance : instanceOfType) {
                         serverInstance.lock();
                         if (serverInstance.getState() == ServerState.FREE) {
+
                             serverInstanceDAO.allocateServerToReservation(serverInstance, bid);
+
                             allocatedReservations.add(bid);
                             serverInstance.unlock();
                             break;
                         }
                         serverInstance.unlock();
                     }
-                    bidsDAO.removeFromList(allocatedReservations);
                 }
+                bidsDAO.removeFromList(allocatedReservations);
             } finally {
                 bidsLock.unlock();
             }
@@ -97,9 +85,7 @@ public class Allocator implements Runnable {
                 availableServersLock.lock();
                 try {
                     while (serverInstanceDAO.freeServersCount() == 0) {
-                        System.out.println("server passei");
                         serversAvailable.await();
-                        System.out.println("server passei 1");
                     }
                 } finally {
                     availableServersLock.unlock();
@@ -108,18 +94,14 @@ public class Allocator implements Runnable {
                 reservationsLock.lock();
                 try {
                     while (!ReservationDAO.hasReservations()) {
-                        System.out.println("reservation passei 1");
-
+                        System.out.println("vou dormir");
                         hasReservations.await();
-
-                        System.out.println("reservation passei 2");
-
+                        System.out.println("acordei");
                     }
                 } finally {
                     reservationsLock.unlock();
                 }
 
-                
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

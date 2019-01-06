@@ -6,7 +6,6 @@
 package cloudservers.data;
 
 import java.util.*;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -26,14 +25,18 @@ public class DemandDAO {
     }
     
     public void removeFromList(List<Reservation> reservations){
+        lock.lock();
         waitingReservations.removeAll(reservations);
+        lock.unlock();
     }
     
     public List<Reservation> getUserWaitingReservations(User u){
         List<Reservation> reservations = new ArrayList<>();
+        lock.lock();
         waitingReservations.stream().filter((r) -> (r.getUser().equals(u))).forEach((r) -> {
             reservations.add(r);
         });
+        lock.unlock();
         return reservations;
     }
 

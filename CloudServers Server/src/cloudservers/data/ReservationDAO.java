@@ -23,6 +23,7 @@ public class ReservationDAO {
     }
     
     public static boolean hasReservations(){
+        //Apenas funciona sem estes Locks
         boolean result;
         DemandDAO.lock.lock();
         BidsDAO.lock.lock();

@@ -89,7 +89,12 @@ public class Reservation implements Comparable<Reservation> {
         //TODO : modify allocation when auctions are implemented
         this.serverInstance = serverInstance;
         this.allocatedTime = System.currentTimeMillis();
-        this.serverInstance.allocate(this, ServerState.BUSY_DEMAND);
+        if(this.reservationType.equals("DEMAND")){
+            this.serverInstance.allocate(this, ServerState.BUSY_DEMAND);
+        }
+        else{
+            this.serverInstance.allocate(this, ServerState.BUSY_SPOT);
+        }
     }
 
     public long getSpentTimeMilis() {
@@ -142,8 +147,8 @@ public class Reservation implements Comparable<Reservation> {
     public int compareTo(Reservation reservation){
         int res;
 
-        if(this.getPricePerHour() > reservation.getPricePerHour()) res = 1;
-        else if(this.getPricePerHour() < reservation.getPricePerHour()) res = -1;
+        if(this.getPricePerHour() < reservation.getPricePerHour()) res = 1;
+        else if(this.getPricePerHour() > reservation.getPricePerHour()) res = -1;
         else res = 0;
 
         return res;
