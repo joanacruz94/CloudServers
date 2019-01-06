@@ -9,7 +9,6 @@ import java.util.HashMap;
 public class UserDAO {
 
     private HashMap<String, User> users = new HashMap<>();
-
     private static UserDAO ourInstance = new UserDAO();
 
     public static UserDAO getInstance() {
@@ -50,8 +49,6 @@ public class UserDAO {
             throw new EmailAlreadyTakenException();
         }
     }
-    
-    //public double getCurrentDebtOfUser(String email){
-        
+            
     
 }

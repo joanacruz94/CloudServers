@@ -20,29 +20,26 @@ public class Allocator implements Runnable {
 
     @Override
     public void run() {
-        DemandDAO demandDAO = DemandDAO.getInstance();
-        BidsDAO bidsDAO = BidsDAO.getInstance();
-        ServerInstanceDAO serverInstanceDAO = ServerInstanceDAO.getInstance();
-        ReentrantLock demandsLock = DemandDAO.lock;
-        ReentrantLock bidsLock = BidsDAO.lock;
-        ReentrantLock reservationsLock = ReservationDAO.lock;
-        ReentrantLock availableServersLock = ServerInstanceDAO.lock;
+        DemandDAO demands = DemandDAO.getInstance();
+        BidsDAO bids  = BidsDAO.getInstance();
+        ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
+        ReservationDAO reservations = ReservationDAO.getInstance();
         Condition hasReservations = ReservationDAO.hasReservations;
-        Condition serversAvailable = ServerInstanceDAO.serversAvailable;
+        Condition serversAvailable = servers.serversAvailable;
 
         while (true) {
-            demandsLock.lock();
+            demands.lock();
             try {
                 List<Reservation> allocatedReservations = new ArrayList<>();
-                for (Reservation reservation : demandDAO.waitingReservations) {
+                for (Reservation reservation : demands.waitingDemands) {
                     String demandServerType = reservation.getServerType();
-                    serverInstanceDAO.getLock().lock();
-                    List<ServerInstance> instancesOfType = serverInstanceDAO.serverInstances.get(demandServerType);
-                    serverInstanceDAO.getLock().unlock();
+                    servers.lock();
+                    List<ServerInstance> instancesOfType = servers.serverInstances.get(demandServerType);
+                    servers.unlock();
                     for (ServerInstance serverInstance : instancesOfType) {
                         serverInstance.lock();
                         if (serverInstance.getState() == ServerState.FREE) {
-                            serverInstanceDAO.allocateServerToReservation(serverInstance, reservation);
+                            servers.allocateServerToReservation(serverInstance, reservation);
                             
                             allocatedReservations.add(reservation);
                             serverInstance.unlock();
@@ -51,24 +48,24 @@ public class Allocator implements Runnable {
                         serverInstance.unlock();
                     }
                 }
-                demandDAO.removeFromList(allocatedReservations);
+                demands.removeFromList(allocatedReservations);
             } finally {
-                demandsLock.unlock();
+                demands.unlock();
             }
-            bidsLock.lock();
+            bids.lock();
             try {
                 List<Reservation> allocatedReservations = new ArrayList<>();
-                for (Reservation bid : bidsDAO.waitingBids) {
+                for (Reservation bid : bids.waitingBids) {
                     String bidServerType = bid.getServerType();
-                    serverInstanceDAO.getLock().lock();
-                    List<ServerInstance> instanceOfType = serverInstanceDAO.serverInstances.get(bidServerType);
-                    serverInstanceDAO.getLock().unlock();
+                    servers.lock();
+                    List<ServerInstance> instanceOfType = servers.serverInstances.get(bidServerType);
+                    servers.unlock();
 
                     for (ServerInstance serverInstance : instanceOfType) {
                         serverInstance.lock();
                         if (serverInstance.getState() == ServerState.FREE) {
 
-                            serverInstanceDAO.allocateServerToReservation(serverInstance, bid);
+                            servers.allocateServerToReservation(serverInstance, bid);
 
                             allocatedReservations.add(bid);
                             serverInstance.unlock();
@@ -77,29 +74,27 @@ public class Allocator implements Runnable {
                         serverInstance.unlock();
                     }
                 }
-                bidsDAO.removeFromList(allocatedReservations);
+                bids.removeFromList(allocatedReservations);
             } finally {
-                bidsLock.unlock();
+                bids.unlock();
             }
             try {
-                availableServersLock.lock();
+                servers.lock();
                 try {
-                    while (serverInstanceDAO.freeServersCount() == 0) {
+                    while (servers.freeServersCount() == 0) {
                         serversAvailable.await();
                     }
                 } finally {
-                    availableServersLock.unlock();
+                    servers.unlock();
                 }
 
-                reservationsLock.lock();
+                reservations.lock();
                 try {
-                    while (!ReservationDAO.hasReservations()) {
-                        System.out.println("vou dormir");
+                    while (!reservations.hasReservations()) {
                         hasReservations.await();
-                        System.out.println("acordei");
                     }
                 } finally {
-                    reservationsLock.unlock();
+                    reservations.unlock();
                 }
 
             } catch (InterruptedException e) {

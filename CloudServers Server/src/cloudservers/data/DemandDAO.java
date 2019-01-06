@@ -14,10 +14,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class DemandDAO {
 
-    public LinkedList<Reservation> waitingReservations = new LinkedList<>();
-
-    public static ReentrantLock lock = new ReentrantLock();
-    
+    public LinkedList<Reservation> waitingDemands = new LinkedList<>();
+    public static ReentrantLock lock = new ReentrantLock(); 
     private static DemandDAO ourInstance = new DemandDAO();
 
     public static DemandDAO getInstance() {
@@ -25,19 +23,27 @@ public class DemandDAO {
     }
     
     public void removeFromList(List<Reservation> reservations){
-        lock.lock();
-        waitingReservations.removeAll(reservations);
-        lock.unlock();
+        this.lock();
+        waitingDemands.removeAll(reservations);
+        this.unlock();
     }
     
     public List<Reservation> getUserWaitingReservations(User u){
         List<Reservation> reservations = new ArrayList<>();
-        lock.lock();
-        waitingReservations.stream().filter((r) -> (r.getUser().equals(u))).forEach((r) -> {
+        this.lock();
+        waitingDemands.stream().filter((r) -> (r.getUser().equals(u))).forEach((r) -> {
             reservations.add(r);
         });
-        lock.unlock();
+        this.unlock();
         return reservations;
+    }
+    
+    public void lock(){
+        this.lock.lock();
+    }
+    
+    public void unlock(){
+        this.lock.unlock();
     }
 
 }

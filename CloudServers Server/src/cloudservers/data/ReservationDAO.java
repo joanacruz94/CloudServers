@@ -14,8 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ReservationDAO {
     public static ReentrantLock lock = new ReentrantLock();
-    public static Condition hasReservations = lock.newCondition();
-    
+    public static Condition hasReservations = lock.newCondition(); 
     private static ReservationDAO ourInstance = new ReservationDAO();
 
     public static ReservationDAO getInstance() {
@@ -27,9 +26,17 @@ public class ReservationDAO {
         boolean result;
         DemandDAO.lock.lock();
         BidsDAO.lock.lock();
-        result = !(DemandDAO.getInstance().waitingReservations.isEmpty() && BidsDAO.getInstance().waitingBids.isEmpty());
+        result = !(DemandDAO.getInstance().waitingDemands.isEmpty() && BidsDAO.getInstance().waitingBids.isEmpty());
         DemandDAO.lock.unlock();
         BidsDAO.lock.unlock();
         return result;
+    }
+    
+    public void lock(){
+        this.lock.lock();
+    }
+    
+    public void unlock(){
+        this.lock.unlock();
     }
 }

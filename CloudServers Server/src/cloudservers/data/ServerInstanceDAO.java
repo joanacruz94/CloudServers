@@ -13,11 +13,11 @@ public class ServerInstanceDAO {
 
     public Map<String, List<ServerInstance>> serverInstances;
     public Map<String, Integer> freeInstancesCount;
-
     
     private static ServerInstanceDAO ourInstance = new ServerInstanceDAO();
     public static ReentrantLock lock = new ReentrantLock();
     public static Condition serversAvailable = lock.newCondition();
+    
     public static ServerInstanceDAO getInstance() {
         return ourInstance;
     }
@@ -37,10 +37,6 @@ public class ServerInstanceDAO {
             freeInstancesCount.put(serverType, nInstancesOfEach);
             
         }
-    }
-
-    public ReentrantLock getLock() {
-        return lock;
     }
 
     public String getServersAsString() {
@@ -74,11 +70,11 @@ public class ServerInstanceDAO {
         reservation.allocate(server);
         reservation.setState(ReservationState.ACTIVE);
         reservation.getUser().addReservation(reservation);
-        this.getLock().lock();
+        this.lock();
         try {
             this.freeInstancesCount.put(server.getName(), freeInstancesCount.get(server.getName())-1);
         } finally {
-            this.getLock().unlock();
+            this.unlock();
         }
 
     }
@@ -91,11 +87,11 @@ public class ServerInstanceDAO {
             reservation.lock();
             reservation.deallocate();        
             reservation.unlock();
-            this.getLock().lock();
+            this.lock();
             try {
                 this.freeInstancesCount.put(reservation.getServerType(), freeInstancesCount.get(reservation.getServerType())+1);
             } finally {
-                this.getLock().unlock();
+                this.unlock();
             }
         }
         else{
@@ -119,6 +115,7 @@ public class ServerInstanceDAO {
         return reservations;
     }
 
+    
     public String getListUserBids(User user){
         List<List<String>> tableLines = new ArrayList<>();
         tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Type", "Price per hour"})));
@@ -140,7 +137,8 @@ public class ServerInstanceDAO {
 
         return new PrettyTable(tableLines).toString();
     }
-
+    
+    
     public String getListUserReservations(User user) {
         List<List<String>> tableLines = new ArrayList<>();
         tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Type", "Current Time", "Price per hour", "Current Cost"})));
@@ -189,10 +187,16 @@ public class ServerInstanceDAO {
 
     public int freeServersCount() {
         int sum = 0;
-        for (int f : this.freeInstancesCount.values()) {
-            sum += f;
-        }
+        sum = this.freeInstancesCount.values().stream().map((f) -> f).reduce(sum, Integer::sum);
         return sum;
+    }
+    
+    public void lock(){
+        this.lock.lock();
+    }
+    
+    public void unlock(){
+        this.lock.unlock();
     }
 
 }

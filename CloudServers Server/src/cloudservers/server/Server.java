@@ -23,8 +23,9 @@ public class Server implements Runnable {
         try {
             UserDAO users = UserDAO.getInstance();
             ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
-            DemandDAO reservations = DemandDAO.getInstance();
+            DemandDAO demands = DemandDAO.getInstance();
             BidsDAO bids = BidsDAO.getInstance();
+            ReservationDAO reservations = ReservationDAO.getInstance();
             ReservationID reservationID = ReservationID.getInstance();
 
             PrintWriter w = new PrintWriter(s.getOutputStream());
@@ -100,11 +101,11 @@ public class Server implements Runnable {
                         String reservationNumber = tokens[1];
                         try {
                             servers.deallocateReservation(reservationNumber, this.user);
-                            ServerInstanceDAO.lock.lock();
+                            servers.lock();
                             try {
-                                ServerInstanceDAO.serversAvailable.signalAll();
+                                servers.serversAvailable.signalAll();
                             } finally {
-                                ServerInstanceDAO.lock.unlock();
+                                servers.unlock();
                             }
                             w.println("Success");
                             w.flush();
@@ -118,17 +119,17 @@ public class Server implements Runnable {
                         String serverType = tokens[1];
                         String reservationNumber = String.valueOf(reservationID.nextID());
                         Reservation reservation = new Reservation(reservationNumber, user, serverType, 0, "DEMAND");
-                        DemandDAO.lock.lock();
+                        demands.lock();
                         try {
-                            reservations.waitingReservations.add(reservation);
-                            ReservationDAO.lock.lock();
+                            demands.waitingDemands.add(reservation);
+                            reservations.lock();
                             try {
-                                ReservationDAO.hasReservations.signalAll();
+                                reservations.hasReservations.signalAll();
                             } finally {
-                                ReservationDAO.lock.unlock();
+                                reservations.unlock();
                             }
                         } finally {
-                            DemandDAO.lock.unlock();
+                            demands.unlock();
                         }
                         w.println(reservationNumber);
                         w.flush();
@@ -140,17 +141,17 @@ public class Server implements Runnable {
                         double priceBid = Double.parseDouble(tokens[2]);
                         String reservationNumber = String.valueOf(reservationID.nextID());
                         Reservation reservation = new Reservation(reservationNumber, user, serverType, priceBid, "SPOT");
-                        BidsDAO.lock.lock();
+                        bids.lock();
                         try {
                             bids.waitingBids.add(reservation);
-                            ReservationDAO.lock.lock();
+                            reservations.lock();
                             try {
-                                ReservationDAO.hasReservations.signalAll();
+                                reservations.hasReservations.signalAll();
                             } finally {
-                                ReservationDAO.lock.unlock();
+                                reservations.unlock();
                             }
                         } finally {
-                            BidsDAO.lock.unlock();
+                            bids.unlock();
                         }
                         w.println(reservationNumber);
                         w.flush();
@@ -159,18 +160,18 @@ public class Server implements Runnable {
                         String[] tokens = line.split(" ");
                         String reservationNumber = tokens[1];
                         boolean exist = false;
-                        DemandDAO.lock.lock();
+                        demands.lock();
                         try {
                             Reservation res = new Reservation();
-                            for (Reservation result : reservations.waitingReservations) {
+                            for (Reservation result : demands.waitingDemands) {
                                 if (result.getId().equals(reservationNumber)) {
                                     res = result;
                                     exist = true;
                                 }
                             }
-                            reservations.waitingReservations.remove(res);
+                            demands.waitingDemands.remove(res);
                         } finally {
-                            DemandDAO.lock.unlock();
+                            demands.unlock();
                         }
                         if(exist){
                             w.println("Sucess: Reservation canceled");
@@ -185,7 +186,7 @@ public class Server implements Runnable {
                         String[] tokens = line.split(" ");
                         String reservationNumber = tokens[2];
                         boolean exist = false;
-                        BidsDAO.lock.lock();
+                        bids.lock();
                         try {
                             Reservation res = new Reservation();
                             for (Reservation result : bids.waitingBids) {
@@ -196,7 +197,7 @@ public class Server implements Runnable {
                             }
                             bids.waitingBids.remove(res);
                         } finally {
-                            BidsDAO.lock.unlock();
+                            bids.unlock();
                         }
                         if(exist){
                             w.println("Sucess: Reservation canceled");
