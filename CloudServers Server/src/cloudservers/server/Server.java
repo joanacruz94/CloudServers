@@ -184,6 +184,23 @@ public class Server implements Runnable {
                         }
                         w.println("Sucess");
                         w.flush();
+                    } else if (line.matches("cancel bid [0-9]+")) {
+                        String[] tokens = line.split(" ");
+                        String reservationNumber = tokens[2];
+                        BidsDAO.lock.lock();
+                        try {
+                            Reservation res = new Reservation();
+                            for (Reservation result : bids.waitingBids) {
+                                if (result.getId().equals(reservationNumber)) {
+                                    res = result;
+                                }
+                            }
+                            bids.waitingBids.remove(res);
+                        } finally {
+                            BidsDAO.lock.unlock();
+                        }
+                        w.println("Sucess");
+                        w.flush();
                     } else {
                         w.println("Error: Command not recognized");
                         w.flush();

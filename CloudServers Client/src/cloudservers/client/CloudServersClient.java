@@ -69,10 +69,7 @@ public class CloudServersClient {
                     enterMyServersStage(cr);
                     break;
                 case "bidsList":
-                    cr.writeToServer("bidsList");
-                    serverAnswer = cr.readFromServer();
-                    serverAnswer = serverAnswer.replace(";", "\n");
-                    System.out.println(serverAnswer);
+                    enterMyBidsStage(cr);
                     break;
                 case "currentDebt":
                     cr.writeToServer(input);
@@ -168,6 +165,33 @@ public class CloudServersClient {
                     break;
             }
         } while (!input.equals("goBack"));
-    }  
+    } 
+    
+    private static void enterMyBidsStage(ConnectionResources cr) throws IOException {
+        String input, serverAnswer;
+        cr.writeToServer("bidsList");
+        serverAnswer = cr.readFromServer();
+        serverAnswer = serverAnswer.replace(";", "\n");
+        System.out.println(serverAnswer);
+        do {
+            input = UI.showMyBidsMenu();
+            switch (input) {
+                case "cancelBid":
+                    input = UI.prompt("Insert the ID of the bid reservation of the server you want to cancel");
+                    cr.writeToServer("cancel bid " + input);
+                    serverAnswer = cr.readFromServer();
+                    System.out.println(serverAnswer);
+                    break;
+                case "refresh":
+                    cr.writeToServer("bidsList");
+                    serverAnswer = cr.readFromServer();
+                    serverAnswer = serverAnswer.replace(";", "\n");
+                    System.out.println(serverAnswer);
+                    break;
+                case "goBack":
+                    break;
+            }
+        } while (!input.equals("goBack"));
+    } 
     
 }

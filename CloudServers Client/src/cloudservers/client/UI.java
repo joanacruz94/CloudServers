@@ -144,6 +144,33 @@ public class UI {
         }
         return res;
     }
+    
+    public static String showMyBidsMenu() {
+        List<Option> options = new ArrayList<>();
+        options.add(new Option("Cancel bid reservation", "1"));
+        options.add(new Option("Refresh my bids list", "2"));
+        options.add(new Option("Go Back", "0"));
+        Menu myBids = new Menu(options, "My Bids Menu");
+        myBids.show();
+        String selectedOption = readLine();
+        String res = null;
+        switch (selectedOption) {
+            case "1":
+                res = "cancelBid";
+                break;
+            case "2":
+                res = "refresh";
+                break;
+            case "0":
+                res = "goBack";
+                break;
+            default:
+                System.out.println("Please select one of the available options");
+                waitForEnter();
+                res = showMyBidsMenu();
+        }
+        return res;
+    }
 
     public static String showLoginMenu() {
         showHeader("Login");
