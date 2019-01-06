@@ -153,7 +153,7 @@ public class ServerInstanceDAO {
             ReservationState stateReservation = reservation.getState();
             String type = server.getName();
             long currentTime = reservation.getSpentTimeMilis();
-            double price = server.getPricePerHour();
+            double price = reservation.getPricePerHour();
             double currentCost = reservation.getCurrentCost();
             tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
                 id,
@@ -188,6 +188,16 @@ public class ServerInstanceDAO {
     public int freeServersCount() {
         int sum = 0;
         sum = this.freeInstancesCount.values().stream().map((f) -> f).reduce(sum, Integer::sum);
+        return sum;
+    }
+    
+    public int busySpotServersCount(String serverType){
+        int sum = 0;
+        List<ServerInstance> servers = this.serverInstances.get(serverType);
+        
+        for(ServerInstance server : servers){
+            if(server.getState() == ServerState.BUSY_SPOT) sum++;
+        }
         return sum;
     }
     

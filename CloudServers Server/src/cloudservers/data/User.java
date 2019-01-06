@@ -1,6 +1,7 @@
 package cloudservers.data;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
@@ -44,17 +45,13 @@ public class User {
         this.reservations.put(r.getId(), r);
     }
     
-
     public double getCurrentDebt(){
         double sum = 0;
         for(Reservation r : this.reservations.values()){
             sum += r.getCurrentCost();
         }
         return sum;
-    }
-    
-    //public void closeReservation()
-    
+    }    
     
     @Override
     public int hashCode() {

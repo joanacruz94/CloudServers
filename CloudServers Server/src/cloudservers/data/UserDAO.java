@@ -1,15 +1,21 @@
 package cloudservers.data;
 
-import cloudservers.data.User;
 import cloudservers.exceptions.EmailAlreadyTakenException;
 import cloudservers.exceptions.NotExistantUserException;
-
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class UserDAO {
 
     private HashMap<String, User> users = new HashMap<>();
     private static UserDAO ourInstance = new UserDAO();
+    public List<String> notificationsList = new ArrayList<>();
+    public static ReentrantLock lock = new ReentrantLock();
+    public static Condition hasNotifications = lock.newCondition(); 
+
 
     public static UserDAO getInstance() {
         return ourInstance;

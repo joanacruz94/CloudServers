@@ -6,9 +6,12 @@
 package cloudservers.server;
 
 import cloudservers.data.*;
+import cloudservers.exceptions.InexistingReservationNumberException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -34,16 +37,23 @@ public class Allocator implements Runnable {
                     servers.lock();
                     List<ServerInstance> instancesOfType = servers.serverInstances.get(demandServerType);
                     int nInstancesFree = servers.freeInstancesCount.get(demandServerType);
+                    int nInstancesBusySpot = servers.busySpotServersCount(demandServerType);
                     servers.unlock();
-                    if(nInstancesFree != 0){
+                    if(nInstancesFree != 0 || nInstancesBusySpot != 0){
                         for (ServerInstance serverInstance : instancesOfType) {
                             serverInstance.lock();
-                            System.out.println("Before cicle demand");
-                            if (serverInstance.getState() == ServerState.FREE) {
-                                System.out.println("Aloquei demand");
+                            ServerState serverState = serverInstance.getState();
+                            if (serverState == ServerState.FREE || serverState == ServerState.BUSY_SPOT) {
+                                if(serverState == ServerState.BUSY_SPOT){
+                                    try {
+                                        servers.deallocateReservation(serverInstance.getAllocatedTo().getId(),serverInstance.getAllocatedTo().getUser());
+                                    } catch (InexistingReservationNumberException ex) {
+                                    }
+                                }
                                 servers.allocateServerToReservation(serverInstance, reservation);
                                 allocatedReservations.add(reservation);
                                 serverInstance.unlock();
+                                
                                 break;
                             }
                             serverInstance.unlock();  
@@ -66,11 +76,8 @@ public class Allocator implements Runnable {
                     if(nInstancesFree != 0){
                         for (ServerInstance serverInstance : instanceOfType) {
                             serverInstance.lock();
-                             System.out.println("Before cicle bid");
                             if (serverInstance.getState() == ServerState.FREE) {
-                                 System.out.println("Aloquei aqui bid");
                                 servers.allocateServerToReservation(serverInstance, bid);
-
                                 allocatedReservations.add(bid);
                                 serverInstance.unlock();
                                 break;
@@ -78,7 +85,6 @@ public class Allocator implements Runnable {
                             serverInstance.unlock();
                         }
                     }
-                    
                 }
                 bids.removeFromList(allocatedReservations);
             } finally {

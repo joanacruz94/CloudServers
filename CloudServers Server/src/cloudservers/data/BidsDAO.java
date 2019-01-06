@@ -9,7 +9,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class BidsDAO {
 
     public Set<Reservation> waitingBids = new TreeSet<>();
-    
     public static ReentrantLock lock = new ReentrantLock();
     private static BidsDAO ourInstance = new BidsDAO();
 

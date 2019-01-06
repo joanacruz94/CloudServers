@@ -182,7 +182,7 @@ public class Server implements Runnable {
                             w.flush();
                         }
                     } //CANCEL BID RESERVATION 
-                    else if (line.matches("cancel bid [0-9]+")) {
+                    else if (line.matches("cancelBid [0-9]+")) {
                         String[] tokens = line.split(" ");
                         String reservationNumber = tokens[2];
                         boolean exist = false;

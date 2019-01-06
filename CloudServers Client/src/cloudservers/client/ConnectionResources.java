@@ -26,6 +26,10 @@ public class ConnectionResources {
         this.r = new BufferedReader(new InputStreamReader(s.getInputStream()));
     }
     
+    public BufferedReader getBufferedReader(){
+        return this.r;
+    }
+    
     public void writeToServer(String s){
         this.w.println(s);
         this.w.flush();
