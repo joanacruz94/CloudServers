@@ -21,6 +21,7 @@ public class Server implements Runnable {
 
     public void run() {
         try {
+            
             UserDAO users = UserDAO.getInstance();
             ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
             DemandDAO demands = DemandDAO.getInstance();
@@ -46,6 +47,7 @@ public class Server implements Runnable {
                         if (success) {
                             try {
                                 this.user = users.getUserByEmail(email);
+                                new Thread(new Notificator(s, email)).start();
                                 w.println("Success: User logged in successfully");
                                 w.flush();
                             } catch (NotExistantUserException e) {
@@ -135,7 +137,6 @@ public class Server implements Runnable {
                         w.flush();
                     } // GET SERVER ON AUCTION
                     else if (line.matches("serverAuction [SML][1-2] [0-9]+(\\.[0-9]+)?")) {
-                        System.out.println("Recebi bid");
                         String[] tokens = line.split(" ");
                         String serverType = tokens[1];
                         double priceBid = Double.parseDouble(tokens[2]);
@@ -184,7 +185,7 @@ public class Server implements Runnable {
                     } //CANCEL BID RESERVATION 
                     else if (line.matches("cancelBid [0-9]+")) {
                         String[] tokens = line.split(" ");
-                        String reservationNumber = tokens[2];
+                        String reservationNumber = tokens[1];
                         boolean exist = false;
                         bids.lock();
                         try {

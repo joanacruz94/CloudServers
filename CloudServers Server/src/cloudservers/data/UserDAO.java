@@ -5,14 +5,15 @@ import cloudservers.exceptions.NotExistantUserException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class UserDAO {
 
-    private HashMap<String, User> users = new HashMap<>();
+    private Map<String, User> users = new HashMap<>();
     private static UserDAO ourInstance = new UserDAO();
-    public List<String> notificationsList = new ArrayList<>();
+    public Map<String, List<String>> notificationsUsers = new HashMap<>();
     public static ReentrantLock lock = new ReentrantLock();
     public static Condition hasNotifications = lock.newCondition(); 
 
@@ -54,6 +55,14 @@ public class UserDAO {
         else{
             throw new EmailAlreadyTakenException();
         }
+    }
+    
+    public void lock(){
+        this.lock.lock();
+    }
+    
+    public void unlock(){
+        this.lock.unlock();
     }
             
     

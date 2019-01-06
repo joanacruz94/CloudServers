@@ -16,27 +16,31 @@ import java.net.Socket;
  * @author joanacruz
  */
 public class ConnectionResources {
+
     private Socket s;
     private PrintWriter w;
     private BufferedReader r;
-    
-    public ConnectionResources() throws IOException{
+    private ClientReader reader;
+
+    public ConnectionResources() throws IOException {
         this.s = new Socket("localhost", 12346);
         this.w = new PrintWriter(s.getOutputStream());
         this.r = new BufferedReader(new InputStreamReader(s.getInputStream()));
+        this.reader = new ClientReader(this.r);
+        reader.start();
     }
-    
-    public BufferedReader getBufferedReader(){
+
+    public BufferedReader getBufferedReader() {
         return this.r;
     }
-    
-    public void writeToServer(String s){
+
+    public void writeToServer(String s) {
         this.w.println(s);
         this.w.flush();
     }
     
-    public String readFromServer() throws IOException{
-        return this.r.readLine();
+    public String readFromServer() throws InterruptedException{
+        return this.reader.readNext();
     }
 
     public void closeSocket() throws IOException {

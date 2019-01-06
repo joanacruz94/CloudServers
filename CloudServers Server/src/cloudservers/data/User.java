@@ -45,6 +45,10 @@ public class User {
         this.reservations.put(r.getId(), r);
     }
     
+    public String getEmail(){
+        return this.mail;
+    }
+    
     public double getCurrentDebt(){
         double sum = 0;
         for(Reservation r : this.reservations.values()){

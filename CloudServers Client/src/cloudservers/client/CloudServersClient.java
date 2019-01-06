@@ -1,17 +1,14 @@
 package cloudservers.client;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
 
 public class CloudServersClient {
 
     public static void main(String[] args) throws Exception {
         try {
             ConnectionResources cr = new ConnectionResources();
-            System.out.println("Connection established to the server");
+            
+            System.out.println("Connection established to the server");      
             String input, serverAnswer;
             do {
                 input = UI.showWelcomeMenu();
@@ -41,7 +38,7 @@ public class CloudServersClient {
         }
     }
 
-    private static String enterLoginStage(ConnectionResources cr) throws IOException {
+    private static String enterLoginStage(ConnectionResources cr) throws IOException, InterruptedException {
         String serverAnswer;
         String input = UI.showLoginMenu();
         cr.writeToServer("login " + input);
@@ -49,7 +46,7 @@ public class CloudServersClient {
         return serverAnswer;
     }
 
-    private static void enterRegisterStage(ConnectionResources cr) throws IOException {
+    private static void enterRegisterStage(ConnectionResources cr) throws IOException, InterruptedException {
         String serverAnswer;
         String input = UI.showRegisterMenu();
         cr.writeToServer("register " + input);
@@ -57,7 +54,7 @@ public class CloudServersClient {
         System.out.println(serverAnswer);
     }
 
-    private static void enterUserStage(ConnectionResources cr) throws IOException {
+    private static void enterUserStage(ConnectionResources cr) throws IOException, InterruptedException {
         String input, serverAnswer;
         do {
             input = UI.showUserMenu();
@@ -85,7 +82,7 @@ public class CloudServersClient {
         } while (!input.equals("logout"));
     }
 
-    private static void enterServersListStage(ConnectionResources cr) throws IOException {
+    private static void enterServersListStage(ConnectionResources cr) throws IOException, InterruptedException {
         String input, serverAnswer;
         cr.writeToServer("serversList");
         serverAnswer = cr.readFromServer();
@@ -110,7 +107,13 @@ public class CloudServersClient {
                     input = UI.showAuctionServerMenu();
                     cr.writeToServer("serverAuction " + input);
                     serverAnswer = cr.readFromServer();
-                    System.out.println("Your reservation number is " + serverAnswer);
+                     if (!serverAnswer.startsWith("Error")) {
+                        System.out.println("Your reservation number is " + serverAnswer);
+                        UI.waitForEnter();
+                    } else {
+                        System.out.println(serverAnswer);
+                        UI.waitForEnter();
+                    }
                     break;
                 case "refresh":
                     cr.writeToServer("serversList");
@@ -125,7 +128,7 @@ public class CloudServersClient {
 
     }
 
-    private static void enterMyServersStage(ConnectionResources cr) throws IOException {
+    private static void enterMyServersStage(ConnectionResources cr) throws IOException, InterruptedException {
         String input, serverAnswer;
         cr.writeToServer("myServers");
         serverAnswer = cr.readFromServer();
@@ -164,7 +167,7 @@ public class CloudServersClient {
         } while (!input.equals("goBack"));
     }
     
-    private static void enterMyBidsStage(ConnectionResources cr) throws IOException {
+    private static void enterMyBidsStage(ConnectionResources cr) throws IOException, InterruptedException {
         String input, serverAnswer;
         cr.writeToServer("bidsList");
         serverAnswer = cr.readFromServer();

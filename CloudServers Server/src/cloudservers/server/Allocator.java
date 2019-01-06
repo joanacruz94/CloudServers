@@ -10,8 +10,6 @@ import cloudservers.exceptions.InexistingReservationNumberException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -24,6 +22,7 @@ public class Allocator implements Runnable {
         DemandDAO demands = DemandDAO.getInstance();
         BidsDAO bids  = BidsDAO.getInstance();
         ServerInstanceDAO servers = ServerInstanceDAO.getInstance();
+        UserDAO users = UserDAO.getInstance();
         ReservationDAO reservations = ReservationDAO.getInstance();
         Condition hasReservations = ReservationDAO.hasReservations;
         Condition serversAvailable = servers.serversAvailable;
@@ -46,7 +45,16 @@ public class Allocator implements Runnable {
                             if (serverState == ServerState.FREE || serverState == ServerState.BUSY_SPOT) {
                                 if(serverState == ServerState.BUSY_SPOT){
                                     try {
-                                        servers.deallocateReservation(serverInstance.getAllocatedTo().getId(),serverInstance.getAllocatedTo().getUser());
+                                        User user = serverInstance.getAllocatedTo().getUser();
+                                        String idReservationDeallocate = serverInstance.getAllocatedTo().getId();
+                                        servers.deallocateReservation(idReservationDeallocate,user);
+                                        users.lock();
+                                        try {
+                                            users.notificationsUsers.get(user.getEmail()).add(":Your reservation with the ID " + idReservationDeallocate + " was canceled because other user demand reservation");
+                                            users.hasNotifications.signal();
+                                        } finally {
+                                            users.lock.unlock();
+                                        }
                                     } catch (InexistingReservationNumberException ex) {
                                     }
                                 }

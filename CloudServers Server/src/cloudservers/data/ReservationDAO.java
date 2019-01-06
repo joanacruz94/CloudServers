@@ -24,11 +24,11 @@ public class ReservationDAO {
     public static boolean hasAnyReservation(){
         //Apenas funciona sem estes Locks
         boolean result;
-        DemandDAO.lock.lock();
-        BidsDAO.lock.lock();
+        //DemandDAO.lock.lock();
+        //BidsDAO.lock.lock();
         result = !(DemandDAO.getInstance().waitingDemands.isEmpty() && BidsDAO.getInstance().waitingBids.isEmpty());
-        DemandDAO.lock.unlock();
-        BidsDAO.lock.unlock();
+        //DemandDAO.lock.unlock();
+        //BidsDAO.lock.unlock();
         return result;
     }
     
