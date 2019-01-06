@@ -21,7 +21,7 @@ public class ReservationDAO {
         return ourInstance;
     }
     
-    public static boolean hasReservations(){
+    public static boolean hasAnyReservation(){
         //Apenas funciona sem estes Locks
         boolean result;
         DemandDAO.lock.lock();

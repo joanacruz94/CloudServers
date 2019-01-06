@@ -6,11 +6,9 @@
 package cloudservers.server;
 
 import cloudservers.data.*;
-import cloudservers.exceptions.InexistingServerTypeException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  *
@@ -35,17 +33,21 @@ public class Allocator implements Runnable {
                     String demandServerType = reservation.getServerType();
                     servers.lock();
                     List<ServerInstance> instancesOfType = servers.serverInstances.get(demandServerType);
+                    int nInstancesFree = servers.freeInstancesCount.get(demandServerType);
                     servers.unlock();
-                    for (ServerInstance serverInstance : instancesOfType) {
-                        serverInstance.lock();
-                        if (serverInstance.getState() == ServerState.FREE) {
-                            servers.allocateServerToReservation(serverInstance, reservation);
-                            
-                            allocatedReservations.add(reservation);
-                            serverInstance.unlock();
-                            break;
+                    if(nInstancesFree != 0){
+                        for (ServerInstance serverInstance : instancesOfType) {
+                            serverInstance.lock();
+                            System.out.println("Before cicle demand");
+                            if (serverInstance.getState() == ServerState.FREE) {
+                                System.out.println("Aloquei demand");
+                                servers.allocateServerToReservation(serverInstance, reservation);
+                                allocatedReservations.add(reservation);
+                                serverInstance.unlock();
+                                break;
+                            }
+                            serverInstance.unlock();  
                         }
-                        serverInstance.unlock();
                     }
                 }
                 demands.removeFromList(allocatedReservations);
@@ -59,20 +61,24 @@ public class Allocator implements Runnable {
                     String bidServerType = bid.getServerType();
                     servers.lock();
                     List<ServerInstance> instanceOfType = servers.serverInstances.get(bidServerType);
+                    int nInstancesFree = servers.freeInstancesCount.get(bidServerType);
                     servers.unlock();
+                    if(nInstancesFree != 0){
+                        for (ServerInstance serverInstance : instanceOfType) {
+                            serverInstance.lock();
+                             System.out.println("Before cicle bid");
+                            if (serverInstance.getState() == ServerState.FREE) {
+                                 System.out.println("Aloquei aqui bid");
+                                servers.allocateServerToReservation(serverInstance, bid);
 
-                    for (ServerInstance serverInstance : instanceOfType) {
-                        serverInstance.lock();
-                        if (serverInstance.getState() == ServerState.FREE) {
-
-                            servers.allocateServerToReservation(serverInstance, bid);
-
-                            allocatedReservations.add(bid);
+                                allocatedReservations.add(bid);
+                                serverInstance.unlock();
+                                break;
+                            }
                             serverInstance.unlock();
-                            break;
                         }
-                        serverInstance.unlock();
                     }
+                    
                 }
                 bids.removeFromList(allocatedReservations);
             } finally {
@@ -90,7 +96,7 @@ public class Allocator implements Runnable {
 
                 reservations.lock();
                 try {
-                    while (!reservations.hasReservations()) {
+                    while (!reservations.hasAnyReservation()) {
                         hasReservations.await();
                     }
                 } finally {
