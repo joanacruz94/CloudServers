@@ -84,8 +84,8 @@ public class Server implements Runnable {
                         w.println("Success: User logged out successfully");
                         w.flush();
                     } // BIDS LIST
-                    else if (line.equals("bidsList")) {
-                        w.println(servers.getListUserBids(this.user).replace("\n", ";"));
+                    else if (line.equals("waitingReservations")) {
+                        w.println(servers.getListWaitingReservations(this.user).replace("\n", ";"));
                         w.flush();
                     } // SERVERS SERVERS
                     else if (line.equals("serversList")) {
@@ -93,7 +93,7 @@ public class Server implements Runnable {
                         w.flush();
                     } // MY SERVERS
                     else if (line.equals("myServers")) {
-                        w.println(servers.getListUserReservations(this.user).replace("\n", ";"));
+                        w.println(servers.getListUserServers(this.user).replace("\n", ";"));
                         w.flush();
                     } // CURRENT DEBT
                     else if (line.equals("currentDebt")) {
@@ -166,53 +166,40 @@ public class Server implements Runnable {
                     else if (line.matches("cancel [0-9]+")) {
                         String[] tokens = line.split(" ");
                         String reservationNumber = tokens[1];
-                        boolean exist = false;
+                        boolean existDemand = false;
+                        boolean existBid = false;
                         demands.lock();
+                        bids.lock();
                         try {
                             Reservation res = new Reservation();
                             for (Reservation result : demands.waitingDemands) {
                                 if (result.getId().equals(reservationNumber)) {
                                     res = result;
-                                    exist = true;
+                                    existDemand = true;
                                 }
                             }
-                            demands.waitingDemands.remove(res);
-                        } finally {
-                            demands.unlock();
-                        }
-                        if (exist) {
-                            w.println("Sucess: Reservation canceled");
-                            w.flush();
-                        } else {
-                            w.println("Error: Please provide a valid reservation ID");
-                            w.flush();
-                        }
-                    } //CANCEL BID RESERVATION 
-                    else if (line.matches("cancelBid [0-9]+")) {
-                        String[] tokens = line.split(" ");
-                        String reservationNumber = tokens[1];
-                        boolean exist = false;
-                        bids.lock();
-                        try {
-                            Reservation res = new Reservation();
                             for (Reservation result : bids.waitingBids) {
                                 if (result.getId().equals(reservationNumber)) {
                                     res = result;
-                                    exist = true;
+                                    existBid = true;
                                 }
                             }
-                            bids.waitingBids.remove(res);
+                            if(existDemand) demands.waitingDemands.remove(res);
+                            else if(existBid) bids.waitingBids.remove(res);
                         } finally {
                             bids.unlock();
+                            demands.unlock();
+                            
                         }
-                        if (exist) {
+                        if (existDemand || existBid) {
                             w.println("Sucess: Reservation canceled");
                             w.flush();
                         } else {
                             w.println("Error: Please provide a valid reservation ID");
                             w.flush();
                         }
-                    } else {
+                    } 
+                    else {
                         w.println("Error: Command not recognized");
                         w.flush();
                     }

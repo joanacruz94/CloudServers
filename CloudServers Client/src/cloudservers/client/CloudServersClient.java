@@ -65,8 +65,8 @@ public class CloudServersClient {
                 case "myServers":
                     enterMyServersStage(cr);
                     break;
-                case "bidsList":
-                    enterMyBidsStage(cr);
+                case "waitingReservations":
+                    enterMyWaitingReservationsStage(cr);
                     break;
                 case "currentDebt":
                     cr.writeToServer(input);
@@ -149,12 +149,6 @@ public class CloudServersClient {
                         UI.waitForEnter();
                     }
                     break;
-                case "cancel":
-                    input = UI.prompt("Insert the ID of the reservation of the server you want to cancel");
-                    cr.writeToServer("cancel " + input);
-                    serverAnswer = cr.readFromServer();
-                    System.out.println(serverAnswer);
-                    break;
                 case "refresh":
                     cr.writeToServer("myServers");
                     serverAnswer = cr.readFromServer();
@@ -167,23 +161,23 @@ public class CloudServersClient {
         } while (!input.equals("goBack"));
     }
     
-    private static void enterMyBidsStage(ConnectionResources cr) throws IOException, InterruptedException {
+    private static void enterMyWaitingReservationsStage(ConnectionResources cr) throws IOException, InterruptedException {
         String input, serverAnswer;
-        cr.writeToServer("bidsList");
+        cr.writeToServer("waitingReservations");
         serverAnswer = cr.readFromServer();
         serverAnswer = serverAnswer.replace(";", "\n");
         System.out.println(serverAnswer);
         do {
-            input = UI.showMyBidsMenu();
+            input = UI.showMyWaitingReservationsMenu();
             switch (input) {
-                case "cancelBid":
-                    input = UI.prompt("Insert the ID of the bid reservation of the server you want to cancel");
-                    cr.writeToServer("cancelBid " + input);
+                case "cancel":
+                    input = UI.prompt("Insert the ID of the reservation of the server you want to cancel");
+                    cr.writeToServer("cancel " + input);
                     serverAnswer = cr.readFromServer();
                     System.out.println(serverAnswer);
                     break;
                 case "refresh":
-                    cr.writeToServer("bidsList");
+                    cr.writeToServer("waitingReservations");
                     serverAnswer = cr.readFromServer();
                     serverAnswer = serverAnswer.replace(";", "\n");
                     System.out.println(serverAnswer);

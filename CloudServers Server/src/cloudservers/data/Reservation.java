@@ -85,6 +85,10 @@ public class Reservation implements Comparable<Reservation> {
     public long getAllocatedTime() {
         return allocatedTime;
     }
+    
+    public String getReservationType(){
+        return this.reservationType;
+    }
 
     public void allocate(ServerInstance serverInstance) {
         //TODO : modify allocation when auctions are implemented

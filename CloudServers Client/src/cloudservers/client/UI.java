@@ -52,7 +52,7 @@ public class UI {
         List<Option> options = new ArrayList<>();
         options.add(new Option("Display servers list", "1"));
         options.add(new Option("Display my servers", "2"));
-        options.add(new Option("Display my bids", "3"));
+        options.add(new Option("Display my waiting reservations", "3"));
         options.add(new Option("Display current debt", "4"));
         options.add(new Option("Logout", "0"));
         Menu userMenu = new Menu(options, "User Menu");
@@ -67,7 +67,7 @@ public class UI {
                 res = "myServers";
                 break;
             case "3":
-                res = "bidsList";
+                res = "waitingReservations";
                 break;
             case "4":
                 res = "currentDebt";
@@ -117,8 +117,7 @@ public class UI {
     public static String showMyServersMenu() {
         List<Option> options = new ArrayList<>();
         options.add(new Option("Deallocate server", "1"));
-        options.add(new Option("Cancel reservation", "2"));
-        options.add(new Option("Refresh my servers list", "3"));
+        options.add(new Option("Refresh my servers list", "2"));
         options.add(new Option("Go Back", "0"));
         Menu myServers = new Menu(options, "My Servers Menu");
         myServers.show();
@@ -129,9 +128,6 @@ public class UI {
                 res = "deallocate";
                 break;
             case "2":
-                res = "cancel";
-                break;
-            case "3":
                 res = "refresh";
                 break;
             case "0":
@@ -145,18 +141,18 @@ public class UI {
         return res;
     }
     
-    public static String showMyBidsMenu() {
+    public static String showMyWaitingReservationsMenu() {
         List<Option> options = new ArrayList<>();
-        options.add(new Option("Cancel bid reservation", "1"));
-        options.add(new Option("Refresh my bids list", "2"));
+        options.add(new Option("Cancel reservation", "1"));
+        options.add(new Option("Refresh my reservations list", "2"));
         options.add(new Option("Go Back", "0"));
-        Menu myBids = new Menu(options, "My Bids Menu");
+        Menu myBids = new Menu(options, "My Waiting Reservations Menu");
         myBids.show();
         String selectedOption = readLine();
         String res = null;
         switch (selectedOption) {
             case "1":
-                res = "cancelBid";
+                res = "cancel";
                 break;
             case "2":
                 res = "refresh";
@@ -167,7 +163,7 @@ public class UI {
             default:
                 System.out.println("Please select one of the available options");
                 waitForEnter();
-                res = showMyBidsMenu();
+                res = showMyWaitingReservationsMenu();
         }
         return res;
     }

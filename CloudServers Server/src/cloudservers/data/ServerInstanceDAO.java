@@ -27,7 +27,7 @@ public class ServerInstanceDAO {
         freeInstancesCount = new HashMap<>();
         ArrayList<ServerInstance> servers = new ArrayList<>();
         String[] serverTypes = {"S1", "S2", "M1", "M2", "L1", "L2"};
-        int nInstancesOfEach = 1;
+        int nInstancesOfEach = 5;
         for (String serverType : serverTypes) {
             servers = new ArrayList<>();
             for (int i = 0; i < nInstancesOfEach; i++) {
@@ -99,8 +99,12 @@ public class ServerInstanceDAO {
         }
     }
     
-    public List<Reservation> listUserWaitingResevations(User user){
+    public List<Reservation> listUserWaitingDemands(User user){
         return DemandDAO.getInstance().getUserWaitingReservations(user);
+    }
+    
+    public List<Reservation> listUserWaitingBids(User user){
+        return BidsDAO.getInstance().getUserBids(user);
     }
     
     public List<Reservation> listUserReservations(User user) {
@@ -108,7 +112,7 @@ public class ServerInstanceDAO {
         Map<String, Reservation> allReservations = user.getReservations();
         List<Reservation> reservations = new ArrayList<>();
 
-        allReservations.values().stream().filter((r) -> (r.getState() != ReservationState.FINISHED)).forEach((r) -> {
+        allReservations.values().stream().filter((r) -> (r.getState() == ReservationState.ACTIVE)).forEach((r) -> {
             reservations.add(r);
         });
         user.unlock();
@@ -116,71 +120,60 @@ public class ServerInstanceDAO {
     }
 
     
-    public String getListUserBids(User user){
+    public String getListWaitingReservations(User user){
         List<List<String>> tableLines = new ArrayList<>();
-        tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Type", "Price per hour"})));
+        tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Server Type", "Reservation Type","Price per hour"})));
 
-        List<Reservation> bidsUser = BidsDAO.getInstance().getUserBids(user);
-
-        bidsUser.forEach((reservation) -> {
+        List<Reservation> bidsUser = listUserWaitingBids(user);
+        List<Reservation> waitingReservation = listUserWaitingDemands(user);
+        List<Reservation> allWaitingReservation = new ArrayList<>();
+        allWaitingReservation.addAll(bidsUser);
+        allWaitingReservation.addAll(waitingReservation);
+        
+        allWaitingReservation.forEach((reservation) -> {
+            ServerInstance server = reservation.getServerInstance();
             String id = reservation.getId();
             ReservationState stateReservation = reservation.getState();
-            String type = reservation.getServerType();
-            String price = String.valueOf(reservation.getPricePerHour());
+            String serverType = reservation.getServerType();
+            String reservationType = reservation.getReservationType();
+            double price = reservation.getPricePerHour();
             tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
-                    id,
-                    stateReservation.toString(),
-                    type,
-                    price
-            })));
+                id,
+                stateReservation.toString(),
+                serverType,
+                reservationType,
+                String.valueOf(price),})));
         });
+        
 
         return new PrettyTable(tableLines).toString();
     }
     
     
-    public String getListUserReservations(User user) {
+    public String getListUserServers(User user) {
         List<List<String>> tableLines = new ArrayList<>();
-        tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Type", "Current Time", "Price per hour", "Current Cost"})));
+        tableLines.add(new ArrayList<>(Arrays.asList(new String[]{"IdReservation", "State Reservation", "Server Type", "Reservation Type", "Current Time", "Price per hour", "Current Cost"})));
 
         List<Reservation> reservationsList = listUserReservations(user);
-        List<Reservation> waitingReservation = listUserWaitingResevations(user);
-        List<Reservation> allReservation = new ArrayList<>();
         reservationsList.forEach((reservation) -> {
             ServerInstance server = reservation.getServerInstance();
             String id = reservation.getId();
-            //String idServer = server.getId();
             ReservationState stateReservation = reservation.getState();
-            String type = server.getName();
+            String serverType = reservation.getServerType();
+            String reservationType = reservation.getReservationType();
             long currentTime = reservation.getSpentTimeMilis();
             double price = reservation.getPricePerHour();
             double currentCost = reservation.getCurrentCost();
             tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
                 id,
-                //idServer,
                 stateReservation.toString(),
-                type,
+                serverType,
+                reservationType,
                 String.valueOf(currentTime / 1000) + " seconds",
                 String.valueOf(price),
                 String.valueOf(currentCost),})));
         });
         
-        waitingReservation.forEach((reservation) -> {
-            String id = reservation.getId();
-            ReservationState stateReservation = reservation.getState();
-            String type = reservation.getServerType();
-            String currentTime = "";
-            String price = "";
-            String currentCost = "";
-            tableLines.add(new ArrayList<>(Arrays.asList(new String[]{
-                id,
-                //idServer,
-                stateReservation.toString(),
-                type,
-                currentTime,
-                price,
-                currentCost,})));
-        });
 
         return new PrettyTable(tableLines).toString();
     }
